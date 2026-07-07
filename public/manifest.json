@@ -1,0 +1,21 @@
+{
+  "name": "Taqwa Enterprise - Premium Pet Foods & Care",
+  "short_name": "Taqwa Pet",
+  "description": "Taqwa Enterprise is Bangladesh's premium importer and distributor of elite pet products, premium food, and smart pet care accessories.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#10b981",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

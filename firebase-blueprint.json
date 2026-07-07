@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile representation in our application",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user ID matching request.auth.uid"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the authenticated user"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full name of the user"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Contact phone number"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "User avatar photo URL"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": [
+        "uid",
+        "email"
+      ]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Taqwa Enterprise Pet Store product entity",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique product ID identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "English product name"
+        },
+        "banglaName": {
+          "type": "string",
+          "description": "Bangla product name translation"
+        },
+        "category": {
+          "type": "string",
+          "description": "Product category (e.g., cats, food)"
+        },
+        "price": {
+          "type": "number",
+          "description": "Selling price of the product"
+        },
+        "originalPrice": {
+          "type": "number",
+          "description": "Original crossed-out price"
+        },
+        "weight": {
+          "type": "string",
+          "description": "Product packaging weight"
+        },
+        "stock": {
+          "type": "number",
+          "description": "Available stock quantity"
+        },
+        "description": {
+          "type": "string",
+          "description": "English description"
+        },
+        "image": {
+          "type": "string",
+          "description": "Unsplash image URL"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average review rating score"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "price",
+        "category"
+      ]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles database collection"
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Store products database collection"
+    }
+  }
+}

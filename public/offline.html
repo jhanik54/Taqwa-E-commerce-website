@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taqwa Enterprise - Offline (অফলাইন)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      text-align: center;
+      background: #f8fafc;
+      color: #1e293b;
+      padding: 50px 20px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+    }
+    .container {
+      max-width: 500px;
+      background: white;
+      padding: 40px;
+      border-radius: 24px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+    }
+    h1 {
+      color: #10b981;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 12px 25px;
+      background: #10b981;
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>আপনি বর্তমানে অফলাইনে আছেন</h1>
+    <p>আপনার ইন্টারনেট সংযোগটি পরীক্ষা করুন। সংযোগ ফিরে এলে পুনরায় লোড করতে রিফ্রেশ বাটনে ক্লিক করুন।</p>
+    <p style="margin-top: 5px; font-size: 12px; color: #94a3b8;">You are currently offline. Please check your internet connection and reload once connected.</p>
+    <a href="/" class="btn" onclick="window.location.reload(); return false;">রিফ্রেশ করুন / Refresh</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Taqwa Enterprise",
+  "description": "Taqwa Enterprise is a premium and secure full-stack e-commerce marketplace for premium pet, bird, rabbit, and fish food, supplements, and accessories with dynamic admin dashboard, live AI support, secured login, real-time order tracking, and data backup synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

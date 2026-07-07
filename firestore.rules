@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net - Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------
+    // GLOBAL SECURITY HELPERS
+    // ---------------------------------
+    
+    // Check if user is authenticated with a verified email
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    // Check if the target userId matches the authenticated user ID
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Check if the document ID is syntactically valid and reasonably sized to prevent poisoning
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Extract incoming request data mapping
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Extract existing database document data mapping
+    function existing() {
+      return resource.data;
+    }
+
+    // Admin authorization check - evaluates the bootstrapped email or an explicit admin document
+    function isAdmin() {
+      return request.auth != null && (
+        (request.auth.token.email == 'taqwaenterpriseoffice@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // ---------------------------------
+    // USER COLLECTION RULES
+    // ---------------------------------
+    
+    match /users/{userId} {
+      // Validate string and properties strictly to prevent shadow fields
+      function isValidUser(data) {
+        return data.keys().hasAll(['uid', 'email']) &&
+               data.keys().size() <= 6 &&
+               data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
+               data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
+               (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150)) &&
+               (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 50)) &&
+               (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1000));
+      }
+
+      // Restrict read access only to owners or administrators (protects PII)
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin()) && isValidId(userId);
+      allow list: if isSignedIn() && isAdmin(); // Only admins can list users
+
+      // Create profile - must be signed in owner, matching email/uid and valid schema format
+      allow create: if isSignedIn() && 
+                    isOwner(userId) && 
+                    isValidId(userId) && 
+                    isValidUser(incoming()) && 
+                    incoming().uid == userId &&
+                    incoming().email == request.auth.token.email;
+
+      // Update profile - must be owner/admin, valid schema, immutable fields preserved
+      allow update: if isSignedIn() && 
+                    isOwner(userId) && 
+                    isValidId(userId) && 
+                    isValidUser(incoming()) && 
+                    incoming().uid == existing().uid &&
+                    incoming().email == existing().email;
+
+      // Deletions are strictly disabled for audit trail compliance
+      allow delete: if false;
+    }
+
+    // ---------------------------------
+    // PRODUCT COLLECTION RULES
+    // ---------------------------------
+    
+    match /products/{productId} {
+      // Validate schema layout for products
+      function isValidProduct(data) {
+        return data.keys().hasAll(['id', 'name', 'price', 'category']) &&
+               data.keys().size() <= 12 &&
+               data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+               data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+               data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+               data.price is number && data.price >= 0 &&
+               (!('banglaName' in data) || (data.banglaName is string && data.banglaName.size() <= 200)) &&
+               (!('originalPrice' in data) || (data.originalPrice is number)) &&
+               (!('weight' in data) || (data.weight is string && data.weight.size() <= 100)) &&
+               (!('stock' in data) || (data.stock is number)) &&
+               (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+               (!('image' in data) || (data.image is string && data.image.size() <= 2000)) &&
+               (!('rating' in data) || (data.rating is number));
+      }
+
+      // Public read access for customers
+      allow get: if true;
+      allow list: if true;
+
+      // Write permission strictly restricted to admins
+      allow create: if isSignedIn() && isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().id == productId;
+      allow update: if isSignedIn() && isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isAdmin() && isValidId(productId);
+    }
+  }
+}
