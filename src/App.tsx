@@ -958,6 +958,20 @@ export default function App() {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    const res = await fetch('/api/admin/delete-order', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-user-email': currentUser?.email || ''
+      },
+      body: JSON.stringify({ id: orderId })
+    });
+    if (res.ok) {
+      await fetchAdminDashboard();
+    }
+  };
+
   // SaaS admin updates stock levels
   const handleUpdateStock = async (productId: string, stock: number) => {
     const res = await fetch('/api/admin/update-stock', {
@@ -1299,6 +1313,7 @@ export default function App() {
               orders={adminDashboardData ? adminDashboardData.orders : []}
               products={products}
               onUpdateOrderStatus={handleUpdateOrderStatus}
+              onDeleteOrder={handleDeleteOrder}
               onUpdateStock={handleUpdateStock}
               onAddProduct={handleAddProduct}
               onUpdateProduct={handleUpdateProduct}

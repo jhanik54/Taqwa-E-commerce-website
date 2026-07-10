@@ -12,19 +12,22 @@ import {
   Truck, 
   AlertOctagon, 
   Mail, 
-  Phone 
+  Phone,
+  Trash2
 } from 'lucide-react';
 import { Order } from '../../types';
 
 interface OrderManagementProps {
   orders: Order[];
   onUpdateOrderStatus: (oId: string, status: string, paymentStatus?: 'Pending' | 'Paid') => Promise<void>;
+  onDeleteOrder?: (oId: string) => Promise<void>;
   lang: 'en' | 'bn';
 }
 
 export default function OrderManagement({
   orders = [],
   onUpdateOrderStatus,
+  onDeleteOrder,
   lang
 }: OrderManagementProps) {
   const isBn = lang === 'bn';
@@ -197,6 +200,20 @@ export default function OrderManagement({
                       >
                         <Printer className="w-3.5 h-3.5" />
                       </button>
+
+                      {onDeleteOrder && (
+                        <button
+                          onClick={() => {
+                            if (confirm(isBn ? `আপনি কি নিশ্চিতভাবে "${o.trackingId}" অর্ডার ডিলিট করতে চান?` : `Are you sure you want to delete order "${o.trackingId}"?`)) {
+                              onDeleteOrder(o.id);
+                            }
+                          }}
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer"
+                          title={isBn ? "অর্ডার মুছুন" : "Delete Order History"}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

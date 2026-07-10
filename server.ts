@@ -612,8 +612,8 @@ const checkAdminRole = (allowedRoles: string[]) => {
     if (!user) {
       return res.status(401).json({ error: "Access Denied. User profile not found in database." });
     }
-    if (user.status === 'Inactive') {
-      return res.status(403).json({ error: "আপনার অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+    if (user.status === 'Inactive' || user.status === 'Banned') {
+      return res.status(403).json({ error: "আপনার অ্যাকাউন্টটি নিষ্ক্রিয় বা ব্যান করা হয়েছে। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।" });
     }
     if (!allowedRoles.includes(user.role)) {
       return res.status(403).json({ error: `Access Denied. Role ${user.role} is unauthorized.` });
@@ -1267,8 +1267,8 @@ app.post("/api/auth/login", (req, res) => {
     return res.status(401).json({ error: "ভুল ইমেইল বা পাসওয়ার্ড। অনুগ্রহ করে আবার চেষ্টা করুন।" });
   }
 
-  if (matchedUser.status === 'Inactive') {
-    return res.status(403).json({ error: "আপনার অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+  if (matchedUser.status === 'Inactive' || matchedUser.status === 'Banned') {
+    return res.status(403).json({ error: "আপনার অ্যাকাউন্টটি নিষ্ক্রিয় বা ব্যান করা হয়েছে। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।" });
   }
 
   // Verify credentials safely (allow empty/undefined passwords for predefined bootstrap mock users to log in easily)
@@ -1288,6 +1288,10 @@ app.post("/api/auth/sync", (req, res) => {
 
   const normalizedEmail = email.trim().toLowerCase();
   let user = USERS.find(u => u.email.trim().toLowerCase() === normalizedEmail);
+
+  if (user && (user.status === 'Inactive' || user.status === 'Banned')) {
+    return res.status(403).json({ error: "আপনার অ্যাকাউন্টটি নিষ্ক্রিয় বা ব্যান করা হয়েছে। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+  }
 
   if (!user) {
     const isSuperAdmin = normalizedEmail === 'taqwaenterpriseoffice@gmail.com';
@@ -2167,6 +2171,7 @@ app.post("/api/admin/add-user", checkAdminRole(["Super Admin"]), (req, res) => {
   };
 
   USERS.push(newUser);
+  saveUsers();
   res.json({ success: true, user: newUser });
 });
 
@@ -2195,6 +2200,7 @@ app.post("/api/admin/update-user", checkAdminRole(["Super Admin", "Admin"]), (re
   if (role !== undefined && requester.role === 'Super Admin') user.role = role;
   if (status !== undefined) user.status = status; // allow Admin & Super Admin to activate/deactivate accounts
 
+  saveUsers();
   res.json({ success: true, user });
 });
 
@@ -2208,7 +2214,20 @@ app.post("/api/admin/delete-user", checkAdminRole(["Super Admin"]), (req, res) =
     return res.status(403).json({ error: "Super Admin account cannot be deleted for safety." });
   }
   USERS.splice(index, 1);
+  saveUsers();
   res.json({ success: true, message: "User deleted successfully" });
+});
+
+// API 13: Order Deletion
+app.post("/api/admin/delete-order", checkAdminRole(["Super Admin", "Admin"]), (req, res) => {
+  const { id } = req.body;
+  const index = ORDERS.findIndex(o => o.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Order not found" });
+  }
+  ORDERS.splice(index, 1);
+  saveOrders();
+  res.json({ success: true, message: "Order deleted successfully" });
 });
 
 

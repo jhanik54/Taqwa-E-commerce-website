@@ -47,6 +47,7 @@ interface AdminPanelProps {
   orders: Order[];
   products: Product[];
   onUpdateOrderStatus: (orderId: string, status: string) => Promise<void>;
+  onDeleteOrder?: (orderId: string) => Promise<void>;
   onUpdateStock: (productId: string, stock: number) => Promise<void>;
   onAddProduct: (productData: any) => Promise<void>;
   onUpdateProduct: (productData: any) => Promise<void>;
@@ -65,6 +66,7 @@ export default function AdminPanel({
   orders = [],
   products = [],
   onUpdateOrderStatus,
+  onDeleteOrder,
   onUpdateStock,
   onAddProduct,
   onUpdateProduct,
@@ -1176,6 +1178,13 @@ export default function AdminPanel({
                   });
                 }
                 await loadDashboardData();
+              }}
+              onDeleteOrder={async (oId) => {
+                if (onDeleteOrder) {
+                  await onDeleteOrder(oId);
+                  await loadDashboardData();
+                  setSuccessMsg('Order history deleted successfully.');
+                }
               }}
               lang={lang}
             />

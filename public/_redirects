@@ -1,0 +1,5 @@
+# Proxy API requests to the production backend server on Cloud Run
+/api/*  https://ais-pre-6eobojjgat7udypqpf663a-1052322835542.asia-southeast1.run.app/api/:splat  200
+
+# Fallback all other requests to index.html for React single page application routing
+/*  /index.html  200
