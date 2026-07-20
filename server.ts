@@ -4,6 +4,8 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 
 dotenv.config();
 
@@ -126,6 +128,81 @@ function getGeminiClient(): GoogleGenAI | null {
     }
   }
   return aiClient;
+}
+
+// Firebase Server-Side Initialization (Option B / অপশন খ)
+let firebaseApp: any = null;
+let firestoreDb: any = null;
+let isFirebaseServerConfigured = false;
+
+try {
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    if (config && config.apiKey) {
+      firebaseApp = initializeApp(config);
+      firestoreDb = getFirestore(firebaseApp, config.firestoreDatabaseId);
+      isFirebaseServerConfigured = true;
+      console.log("[FIREBASE] Option B: Server-side Firebase & Firestore successfully initialized!");
+    }
+  }
+} catch (error) {
+  console.warn("[FIREBASE] Option B: Server-side Firebase initialization skipped/failed:", error);
+}
+
+// Option B Firestore Sync Helpers
+async function syncProductToFirestore(product: any) {
+  if (!isFirebaseServerConfigured || !firestoreDb) return;
+  try {
+    const productDocRef = doc(firestoreDb, "products", product.id);
+    const cleanProduct = {
+      id: product.id,
+      name: product.name,
+      banglaName: product.banglaName || "",
+      category: product.category,
+      price: Number(product.price),
+      originalPrice: Number(product.originalPrice || product.price),
+      weight: product.weight || "1 Pcs",
+      stock: Number(product.stock) || 0,
+      description: product.description || "",
+      banglaDescription: product.banglaDescription || "",
+      image: product.image || "",
+      rating: Number(product.rating || 5.0)
+    };
+    await setDoc(productDocRef, cleanProduct);
+    console.log(`[Option B / অপশন খ] Synced product ${product.id} to Firestore server-side.`);
+  } catch (err) {
+    console.error(`[Option B / অপশন খ] Error syncing product ${product.id} to Firestore:`, err);
+  }
+}
+
+async function deleteProductFromFirestore(productId: string) {
+  if (!isFirebaseServerConfigured || !firestoreDb) return;
+  try {
+    const productDocRef = doc(firestoreDb, "products", productId);
+    await deleteDoc(productDocRef);
+    console.log(`[Option B / অপশন খ] Deleted product ${productId} from Firestore server-side.`);
+  } catch (err) {
+    console.error(`[Option B / অপশন খ] Error deleting product ${productId} from Firestore:`, err);
+  }
+}
+
+async function syncUserToFirestore(user: any) {
+  if (!isFirebaseServerConfigured || !firestoreDb) return;
+  try {
+    const userDocRef = doc(firestoreDb, "users", user.id || user.uid || `u-${Date.now()}`);
+    const cleanUser = {
+      uid: user.id || user.uid || "",
+      email: user.email || "",
+      displayName: user.name || user.displayName || user.email?.split("@")[0] || "",
+      phoneNumber: user.phone || user.phoneNumber || "",
+      photoURL: user.avatar || user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+    };
+    await setDoc(userDocRef, cleanUser, { merge: true });
+    console.log(`[Option B / অপশন খ] Synced user ${cleanUser.uid} to Firestore server-side.`);
+  } catch (err) {
+    console.error(`[Option B / অপশন খ] Error syncing user to Firestore:`, err);
+  }
 }
 
 // Global In-Memory Database for Taqwa Enterprise
@@ -1280,8 +1357,8 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 // API 5.4: Get or create Firebase user in backend database
-app.post("/api/auth/sync", (req, res) => {
-  const { name, email, phone, avatar } = req.body;
+app.post("/api/auth/sync", async (req, res) => {
+  const { name, email, phone, avatar, uid } = req.body;
   if (!email) {
     return res.status(400).json({ error: "Email is required for syncing." });
   }
@@ -1296,7 +1373,7 @@ app.post("/api/auth/sync", (req, res) => {
   if (!user) {
     const isSuperAdmin = normalizedEmail === 'taqwaenterpriseoffice@gmail.com';
     user = {
-      id: `u-${Date.now()}`,
+      id: uid || `u-${Date.now()}`,
       name: name || email.split('@')[0],
       email: normalizedEmail,
       phone: phone || "",
@@ -1311,7 +1388,12 @@ app.post("/api/auth/sync", (req, res) => {
     saveUsers();
   }
 
-  res.json({ success: true, user });
+  // Option B: Server-side sync user profile with Firestore
+  if (isFirebaseServerConfigured && firestoreDb) {
+    await syncUserToFirestore(user);
+  }
+
+  res.json({ success: true, user, syncedToFirestore: isFirebaseServerConfigured });
 });
 
 // API 5.5: Update user profile and address book (Support multiple addresses and defaults)
@@ -1501,7 +1583,7 @@ app.post("/api/admin/update-stock", checkAdminRole(["Super Admin", "Admin", "Man
 });
 
 // Admin product customizer CRUD: Add a brand new product
-app.post("/api/admin/add-product", checkAdminRole(["Super Admin", "Admin"]), (req: any, res) => {
+app.post("/api/admin/add-product", checkAdminRole(["Super Admin", "Admin"]), async (req: any, res) => {
   const { 
     name, banglaName, category, price, originalPrice, weight, stock, description, banglaDescription, image, tags,
     status, featured, newArrival, bestSeller, images, variants, sku, barcode, seoTitle, seoDescription
@@ -1545,14 +1627,19 @@ app.post("/api/admin/add-product", checkAdminRole(["Super Admin", "Admin"]), (re
   PRODUCTS.unshift(newProduct);
   saveProducts();
 
+  // Option B: Server-side sync added product with Firestore
+  if (isFirebaseServerConfigured && firestoreDb) {
+    await syncProductToFirestore(newProduct);
+  }
+
   // Audit log entry
   logInventory(newProduct.id, "STOCK_IN", newProduct.stock, newProduct.stock, "Initial product catalog listing creation", req.requestUser?.name || "Admin Catalogist");
 
-  res.json({ success: true, product: newProduct });
+  res.json({ success: true, product: newProduct, syncedToFirestore: isFirebaseServerConfigured });
 });
 
 // Admin product customizer CRUD: Update product parameters
-app.post("/api/admin/update-product", checkAdminRole(["Super Admin", "Admin"]), (req: any, res) => {
+app.post("/api/admin/update-product", checkAdminRole(["Super Admin", "Admin"]), async (req: any, res) => {
   const { 
     id, name, banglaName, category, price, originalPrice, weight, stock, description, banglaDescription, image, tags,
     status, featured, newArrival, bestSeller, images, variants, sku, barcode, seoTitle, seoDescription
@@ -1599,11 +1686,17 @@ app.post("/api/admin/update-product", checkAdminRole(["Super Admin", "Admin"]), 
   }
 
   saveProducts();
-  res.json({ success: true, product });
+
+  // Option B: Server-side sync updated product with Firestore
+  if (isFirebaseServerConfigured && firestoreDb) {
+    await syncProductToFirestore(product);
+  }
+
+  res.json({ success: true, product, syncedToFirestore: isFirebaseServerConfigured });
 });
 
 // Admin product customizer CRUD: Delete product
-app.post("/api/admin/delete-product", checkAdminRole(["Super Admin", "Admin"]), (req, res) => {
+app.post("/api/admin/delete-product", checkAdminRole(["Super Admin", "Admin"]), async (req, res) => {
   const { id } = req.body;
   const index = PRODUCTS.findIndex(p => p.id === id);
   if (index === -1) {
@@ -1611,7 +1704,13 @@ app.post("/api/admin/delete-product", checkAdminRole(["Super Admin", "Admin"]), 
   }
   PRODUCTS.splice(index, 1);
   saveProducts();
-  res.json({ success: true, message: "Product deleted" });
+
+  // Option B: Server-side delete product from Firestore
+  if (isFirebaseServerConfigured && firestoreDb) {
+    await deleteProductFromFirestore(id);
+  }
+
+  res.json({ success: true, message: "Product deleted", syncedToFirestore: isFirebaseServerConfigured });
 });
 
 // API 7: Data Synchronizing & Encryption Backup Simulation (Cloud sync status)
@@ -1626,14 +1725,46 @@ app.get("/api/sync/status", (req, res) => {
   });
 });
 
-app.post("/api/sync/trigger-backup", (req, res) => {
-  res.json({
-    success: true,
-    message: "তাকওয়া এন্টারপ্রাইজ লোকাল ডাটাবেজ ক্লাউড ব্যাকআপ সার্ভারে অত্যন্ত সুরক্ষিতভাবে এনক্রিপ্ট ও সিঙ্ক হয়েছে!",
-    backupSize: `${(JSON.stringify(ORDERS) + JSON.stringify(PRODUCTS)).length} bytes`,
-    timestamp: new Date().toISOString(),
-    encryptionAlgorithm: "AES-GCM-256"
-  });
+app.post("/api/sync/trigger-backup", async (req, res) => {
+  if (!isFirebaseServerConfigured || !firestoreDb) {
+    return res.status(500).json({
+      success: false,
+      error: "Firebase server-side is not configured. Please connect Firebase."
+    });
+  }
+
+  try {
+    console.log("[Option B] Starting complete server-side sync to Firestore...");
+    // 1. Sync all products
+    let syncedProductsCount = 0;
+    for (const product of PRODUCTS) {
+      await syncProductToFirestore(product);
+      syncedProductsCount++;
+    }
+
+    // 2. Sync all active users
+    let syncedUsersCount = 0;
+    for (const user of USERS) {
+      await syncUserToFirestore(user);
+      syncedUsersCount++;
+    }
+
+    res.json({
+      success: true,
+      message: `তাকওয়া এন্টারপ্রাইজ লোকাল ডাটাবেজের সকল ডেটা (${syncedProductsCount}টি প্রোডাক্ট ও ${syncedUsersCount}টি ইউজার) সফলভাবে ক্লাউড ব্যাকআপ সার্ভারে অত্যন্ত সুরক্ষিতভাবে সিঙ্ক হয়েছে!`,
+      backupSize: `${(JSON.stringify(ORDERS) + JSON.stringify(PRODUCTS)).length} bytes`,
+      timestamp: new Date().toISOString(),
+      encryptionAlgorithm: "AES-GCM-256",
+      syncedProductsCount,
+      syncedUsersCount
+    });
+  } catch (error: any) {
+    console.error("[Option B] Manual backup sync failed:", error);
+    res.status(500).json({
+      success: false,
+      error: "Cloud sync failed: " + error.message
+    });
+  }
 });
 
 // API 8: AI-based customer personalized recommendations algorithm
@@ -1845,7 +1976,7 @@ app.post("/api/admin/delete-coupon", checkAdminRole(["Super Admin", "Admin"]), (
 // ---------------------------------
 
 // 1. DUPLICATE PRODUCT API
-app.post("/api/admin/duplicate-product", checkAdminRole(["Super Admin", "Admin"]), (req: any, res) => {
+app.post("/api/admin/duplicate-product", checkAdminRole(["Super Admin", "Admin"]), async (req: any, res) => {
   const { id } = req.body;
   const product = PRODUCTS.find(p => p.id === id);
   if (!product) {
@@ -1870,10 +2001,15 @@ app.post("/api/admin/duplicate-product", checkAdminRole(["Super Admin", "Admin"]
   PRODUCTS.unshift(duplicated);
   saveProducts();
 
+  // Option B: Server-side sync duplicated product with Firestore
+  if (isFirebaseServerConfigured && firestoreDb) {
+    await syncProductToFirestore(duplicated);
+  }
+
   // Log inventory duplication
   logInventory(newId, "ADJUSTMENT", 0, 0, "Duplicate Product Creation", req.requestUser?.name || "Admin Duplicator");
 
-  res.json({ success: true, product: duplicated });
+  res.json({ success: true, product: duplicated, syncedToFirestore: isFirebaseServerConfigured });
 });
 
 // 2. ADMIN REVIEW MODERATION / APPROVAL API

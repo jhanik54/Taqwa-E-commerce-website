@@ -11,7 +11,8 @@ import {
   updateProfile,
   User as FirebaseUser
 } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '../lib/firebase';
+import { auth, db, isFirebaseConfigured } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { User } from '../types';
 
 interface AuthContextType {
@@ -62,11 +63,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sync Firebase authenticated user details with server USERS database
   const syncUserProfile = async (fbUser: FirebaseUser | { email: string; displayName?: string; phoneNumber?: string; photoURL?: string }, additional?: { name?: string; phone?: string }) => {
+    // Direct Firestore Database Live Sync (Original Mode)
+    if (isFirebaseConfigured && db) {
+      try {
+        const userId = (fbUser as any).uid || (fbUser as any).id;
+        if (userId && fbUser.email) {
+          const userDocRef = doc(db, 'users', userId);
+          const userData: any = {
+            uid: userId,
+            email: fbUser.email,
+          };
+          const displayName = additional?.name || fbUser.displayName || fbUser.email?.split('@')[0];
+          if (displayName) userData.displayName = displayName;
+          const phoneNumber = additional?.phone || fbUser.phoneNumber;
+          if (phoneNumber) userData.phoneNumber = phoneNumber;
+          const photoURL = fbUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+          if (photoURL) userData.photoURL = photoURL;
+
+          await setDoc(userDocRef, userData, { merge: true });
+          console.log('Successfully synchronized profile with Firestore Original Mode:', userData);
+        }
+      } catch (firestoreErr) {
+        console.error('Firestore user profile sync error:', firestoreErr);
+      }
+    }
+
     try {
       const response = await fetch('/api/auth/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          uid: (fbUser as any).uid || (fbUser as any).id,
           email: fbUser.email,
           name: additional?.name || fbUser.displayName || fbUser.email?.split('@')[0],
           phone: additional?.phone || fbUser.phoneNumber || '',
@@ -77,6 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user) {
+          if (data.syncedToFirestore) {
+            console.log('Option B: Successfully synchronized profile with Firestore server-side:', data.user.id);
+          }
           setCurrentUser(data.user);
           return data.user;
         }

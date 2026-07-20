@@ -50,7 +50,8 @@ import ProfilePage from './components/ProfilePage';
 import { Product, CartItem, Order, User, ChatMessage, StoreNotification } from './types';
 import { useAuth } from './context/AuthContext';
 import VerificationScreen from './components/VerificationScreen';
-import { isFirebaseConfigured } from './lib/firebase';
+import { isFirebaseConfigured, db } from './lib/firebase';
+import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 
 
 const HERO_SLIDES = [
@@ -411,8 +412,39 @@ export default function App() {
     });
   };
 
-  // Fetch products from server endpoint
+  // Fetch products from server endpoint or Firestore (Original Mode)
   const fetchProducts = async () => {
+    if (isFirebaseConfigured && db) {
+      try {
+        console.log("Original Mode: Loading products from Firestore...");
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const firestoreProducts: Product[] = [];
+        querySnapshot.forEach((docSnap) => {
+          firestoreProducts.push(docSnap.data() as Product);
+        });
+
+        if (firestoreProducts.length > 0) {
+          // Client-side filtering based on category and search
+          let filtered = firestoreProducts;
+          if (activeCategory !== 'all') {
+            filtered = filtered.filter(p => p.category === activeCategory);
+          }
+          if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(p => 
+              p.name.toLowerCase().includes(query) || 
+              (p.banglaName && p.banglaName.includes(query)) ||
+              (p.description && p.description.toLowerCase().includes(query))
+            );
+          }
+          setProducts(filtered);
+          return; // successfully loaded from Firestore!
+        }
+      } catch (firestoreErr) {
+        console.warn("Firestore products fetch failed, falling back to Express API:", firestoreErr);
+      }
+    }
+
     try {
       let url = '/api/products';
       const params = new URLSearchParams();
@@ -599,6 +631,21 @@ export default function App() {
       body: JSON.stringify(productData)
     });
     if (res.ok) {
+      try {
+        const addedData = await res.clone().json();
+        const newProduct = addedData.product;
+        if (newProduct && newProduct.id) {
+          if (addedData.syncedToFirestore) {
+            console.log("Option B: Synced added product with Firestore server-side:", newProduct.id);
+          }
+          if (isFirebaseConfigured && db) {
+            await setDoc(doc(db, 'products', newProduct.id), newProduct);
+            console.log("Option A: Synced added product with Firestore client-side:", newProduct.id);
+          }
+        }
+      } catch (fsErr) {
+        console.error("Firestore product sync error during add:", fsErr);
+      }
       await fetchProducts();
       await fetchAdminDashboard();
     } else {
@@ -618,6 +665,21 @@ export default function App() {
       body: JSON.stringify(productData)
     });
     if (res.ok) {
+      try {
+        const updatedData = await res.clone().json();
+        const updatedProduct = updatedData.product;
+        if (updatedProduct && updatedProduct.id) {
+          if (updatedData.syncedToFirestore) {
+            console.log("Option B: Synced updated product with Firestore server-side:", updatedProduct.id);
+          }
+          if (isFirebaseConfigured && db) {
+            await setDoc(doc(db, 'products', updatedProduct.id), updatedProduct);
+            console.log("Option A: Synced updated product with Firestore client-side:", updatedProduct.id);
+          }
+        }
+      } catch (fsErr) {
+        console.error("Firestore product sync error during update:", fsErr);
+      }
       await fetchProducts();
       await fetchAdminDashboard();
     } else {
@@ -637,6 +699,20 @@ export default function App() {
       body: JSON.stringify({ id: prodId })
     });
     if (res.ok) {
+      try {
+        const data = await res.json();
+        if (data.syncedToFirestore) {
+          console.log("Option B: Deleted product from Firestore server-side:", prodId);
+        }
+      } catch (e) {}
+      if (isFirebaseConfigured && db) {
+        try {
+          await deleteDoc(doc(db, 'products', prodId));
+          console.log("Option A: Deleted product from Firestore client-side:", prodId);
+        } catch (fsErr) {
+          console.error("Firestore product deletion error:", fsErr);
+        }
+      }
       await fetchProducts();
       await fetchAdminDashboard();
     } else {
