@@ -4283,10 +4283,12 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    const buildPath = fs.existsSync(path.join(process.cwd(), "build"))
+      ? path.join(process.cwd(), "build")
+      : path.join(process.cwd(), "dist");
+    app.use(express.static(buildPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      res.sendFile(path.join(buildPath, "index.html"));
     });
   }
 
