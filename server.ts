@@ -295,7 +295,8 @@ criticalEnvVars.forEach((v) => {
 });
 
 
-const PORT = Number(process.env.PORT) || 3000;
+const rawPort = process.env.PORT;
+const PORT: number | string = rawPort ? (isNaN(Number(rawPort)) ? rawPort : Number(rawPort)) : 3000;
 
 // Initialize Gemini API responsibly (Lazy client setup)
 let aiClient: GoogleGenAI | null = null;
@@ -4292,9 +4293,15 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Taqwa Enterprise full-stack server running on address http://0.0.0.0:${PORT}`);
-  });
+  if (typeof PORT === "string") {
+    app.listen(PORT, () => {
+      console.log(`Taqwa Enterprise full-stack server running on socket: ${PORT}`);
+    });
+  } else {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Taqwa Enterprise full-stack server running on address http://0.0.0.0:${PORT}`);
+    });
+  }
 }
 
 startServer();
