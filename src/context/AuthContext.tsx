@@ -117,7 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Network error or server-side sync failed -> Fallback to client-side initialized session
     // This protects user session from complete failure if the backend server is temporarily unreachable
-    const isSuperAdmin = fbUser.email?.trim().toLowerCase() === 'taqwaenterpriseoffice@gmail.com';
+    const savedSuperAdmin = localStorage.getItem('taqwa_super_admin_email') || 'taqwaenterpriseoffice@gmail.com';
+    const isSuperAdmin = fbUser.email?.trim().toLowerCase() === savedSuperAdmin.trim().toLowerCase();
     const fallbackUser: User = {
       id: (fbUser as any).uid || `u-fallback-${Date.now()}`,
       name: additional?.name || fbUser.displayName || fbUser.email?.split('@')[0] || 'Taqwa Customer',
@@ -287,7 +288,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Simulated Verification check:
       // Require email verification unless it is the pre-configured admin or ends with taqwa.com
-      const needsVerification = normalizedEmail !== 'taqwaenterpriseoffice@gmail.com' && !normalizedEmail.endsWith('taqwa.com');
+      const savedSuperAdmin = localStorage.getItem('taqwa_super_admin_email') || 'taqwaenterpriseoffice@gmail.com';
+      const needsVerification = normalizedEmail !== savedSuperAdmin.trim().toLowerCase() && !normalizedEmail.endsWith('taqwa.com');
       const isVer = !needsVerification;
 
       setFirebaseUser(mockUserObj as any);

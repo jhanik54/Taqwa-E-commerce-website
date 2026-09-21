@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Star, Sparkles, MessageCirclePlus, Weight, FileText, Heart } from 'lucide-react';
+import { X, Star, Sparkles, MessageCirclePlus, Weight, FileText } from 'lucide-react';
 import { Product } from '../types';
+import { DEFAULT_PRODUCT_IMAGE } from '../lib/cloudinary';
 
 interface ProductModalProps {
   product: Product;
@@ -9,8 +10,6 @@ interface ProductModalProps {
   onAddToCart: (product: Product) => void;
   onBuyNow?: (product: Product) => void;
   onReviewSubmit: (productId: string, userName: string, rating: number, comment: string, reviewId?: string) => Promise<void>;
-  isFavorite: boolean;
-  onToggleWishlist: (product: Product) => void;
   products?: Product[];
 }
 
@@ -21,8 +20,6 @@ export default function ProductModal({
   onAddToCart,
   onBuyNow,
   onReviewSubmit,
-  isFavorite,
-  onToggleWishlist,
   products = []
 }: ProductModalProps) {
   const [userName, setUserName] = useState('');
@@ -90,6 +87,9 @@ export default function ProductModal({
               <img
                 src={activeImage}
                 alt={activeProduct.name}
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                }}
                 className="w-full h-full object-cover transition-all"
                 referrerPolicy="no-referrer"
               />
@@ -128,8 +128,8 @@ export default function ProductModal({
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full uppercase">
                   {lang === 'bn' 
-                    ? (activeProduct.category === 'birds' ? 'পাখি' : activeProduct.category === 'cats' ? 'বিড়াল' : activeProduct.category === 'fish' ? 'মাছ' : activeProduct.category === 'rabbits' ? 'खरগোশ' : activeProduct.category === 'accessories' ? 'একসেসরিজ' : 'সাপ্লিমেন্ট') 
-                    : activeProduct.category}
+                    ? (activeProduct.category === 'pigeons' ? 'কবুতরের খাবার' : activeProduct.category === 'birds' ? 'পাখির খাবার' : activeProduct.category === 'medicine' || activeProduct.category === 'supplements' ? 'ঔষধ' : activeProduct.category === 'accessories' ? 'একসেসরিজ' : activeProduct.category) 
+                    : (activeProduct.category === 'pigeons' ? 'Pigeon Feed' : activeProduct.category === 'birds' ? 'Bird Feed' : activeProduct.category === 'medicine' || activeProduct.category === 'supplements' ? 'Medicine' : activeProduct.category === 'accessories' ? 'Accessories' : activeProduct.category)}
                 </span>
                 {activeProduct.subcategory && (
                   <span className="text-[10px] sm:text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full uppercase">
@@ -217,7 +217,7 @@ export default function ProductModal({
               <div className="mb-4">
                 <div className="flex justify-between text-[11px] font-medium text-gray-500 mb-1">
                   <span>{lang === 'bn' ? 'ইনভেন্টরি অবস্থা' : 'Stock Availability'}</span>
-                  <span className="font-semibold">{activeProduct.stock > 0 ? `${activeProduct.stock} ${lang === 'bn' ? 'পিস স্টক আছে' : 'items left'}` : (lang === 'bn' ? 'স্টক শেষ' : 'Out of stock')}</span>
+                  <span className="font-semibold">{activeProduct.stock > 0 ? `${activeProduct.stock} ${lang === 'bn' ? 'কেজি স্টক আছে' : 'kg in stock'}` : (lang === 'bn' ? 'স্টক শেষ' : 'Out of stock')}</span>
                 </div>
                 <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                   <div 
@@ -273,18 +273,6 @@ export default function ProductModal({
                 >
                   <span>⚡</span>
                   <span>{lang === 'bn' ? 'এখনই কিনুন' : 'Buy Now'}</span>
-                </button>
-
-                <button
-                  onClick={() => onToggleWishlist(activeProduct)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95 ${
-                    isFavorite 
-                      ? 'bg-red-50 border-red-200 text-red-500' 
-                      : 'bg-white border-gray-200 text-slate-400 hover:text-red-400'
-                  }`}
-                  title={isFavorite ? (lang === 'bn' ? 'পছন্দ তালিকা থেকে সরান' : 'Remove from Favorites') : (lang === 'bn' ? 'পছন্দে যোগ করুন' : 'Add to Favorites')}
-                >
-                  <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
               </div>
 

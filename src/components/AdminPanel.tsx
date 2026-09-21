@@ -21,9 +21,34 @@ import {
   MessageSquare,
   Clock,
   AlertCircle,
-  Inbox
+  Inbox,
+  Package,
+  DollarSign,
+  Building,
+  Receipt,
+  FileSpreadsheet,
+  Truck,
+  MapPin
 } from 'lucide-react';
-import { Order, Product, User, Category, Coupon, Banner, FlashSale, InventoryLog, ActivityLog, StoreSettings } from '../types';
+import { 
+  Order, 
+  Product, 
+  User, 
+  Category, 
+  Coupon, 
+  Banner, 
+  FlashSale, 
+  InventoryLog, 
+  ActivityLog, 
+  StoreSettings,
+  Supplier,
+  PurchaseOrder,
+  Expense,
+  DamageWaste,
+  AccountTransaction,
+  CourierParcel,
+  CourierSettings
+} from '../types';
 
 // Importing sub-modules
 import DashboardOverview from './admin/DashboardOverview';
@@ -34,6 +59,10 @@ import PromotionAndSales from './admin/PromotionAndSales';
 import StaffAndCustomers from './admin/StaffAndCustomers';
 import InventoryAndReviews from './admin/InventoryAndReviews';
 import NotificationAndSettings from './admin/NotificationAndSettings';
+import InventoryManagement from './admin/InventoryManagement';
+import AccountsManagement from './admin/AccountsManagement';
+import CourierManagement from './admin/CourierManagement';
+import CourierPointManagement from './admin/CourierPointManagement';
 
 interface AdminPanelProps {
   currentUser: User | null;
@@ -46,7 +75,7 @@ interface AdminPanelProps {
   };
   orders: Order[];
   products: Product[];
-  onUpdateOrderStatus: (orderId: string, status: string) => Promise<void>;
+  onUpdateOrderStatus: (orderId: string, status: string, paymentStatus?: 'Pending' | 'Paid') => Promise<void>;
   onDeleteOrder?: (orderId: string) => Promise<void>;
   onUpdateStock: (productId: string, stock: number) => Promise<void>;
   onAddProduct: (productData: any) => Promise<void>;
@@ -57,6 +86,8 @@ interface AdminPanelProps {
   onRefreshSync: () => Promise<void>;
   onLogout?: () => Promise<void> | void;
   onExitAdminView?: () => void;
+  onSettingsChange?: (newSettings: StoreSettings) => void;
+  onBannersChange?: (banners: Banner[]) => void;
 }
 
 export default function AdminPanel({
@@ -75,7 +106,9 @@ export default function AdminPanel({
   syncStatus,
   onRefreshSync,
   onLogout,
-  onExitAdminView
+  onExitAdminView,
+  onSettingsChange,
+  onBannersChange
 }: AdminPanelProps) {
   const isBn = lang === 'bn';
 
@@ -116,7 +149,7 @@ export default function AdminPanel({
 
   // Selected administrative view state
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'products' | 'categories' | 'orders' | 'promotions' | 'users' | 'inventory' | 'settings'
+    'overview' | 'products' | 'categories' | 'orders' | 'inventory' | 'accounts' | 'courier' | 'courier-points' | 'promotions' | 'users' | 'settings'
   >('overview');
 
   // Loading indicator & error banner state
@@ -132,6 +165,12 @@ export default function AdminPanel({
   const [inventoryLogs, setInventoryLogs] = useState<InventoryLog[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseOrder[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [damages, setDamages] = useState<DamageWaste[]>([]);
+  const [transactions, setTransactions] = useState<AccountTransaction[]>([]);
+  const [accountsSummary, setAccountsSummary] = useState<any>(null);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => {
     const cached = localStorage.getItem('taqwa_settings');
     if (cached) {
@@ -142,7 +181,7 @@ export default function AdminPanel({
           logo: parsed.logo || '',
           favicon: parsed.favicon || '',
           contactEmail: parsed.contactEmail || 'taqwaenterpriseoffice@gmail.com',
-          contactPhone: parsed.contactPhone || '01999999999',
+          contactPhone: parsed.contactPhone || '01913955452',
           businessHours: parsed.businessHours || '10 AM - 10 PM',
           socialFacebook: parsed.socialFacebook || 'https://facebook.com',
           socialYoutube: parsed.socialYoutube || 'https://youtube.com',
@@ -151,14 +190,18 @@ export default function AdminPanel({
           taxRate: parsed.taxRate !== undefined ? parsed.taxRate : 0,
           currency: parsed.currency || 'BDT',
           language: parsed.language || 'en',
-          bkashNumber: parsed.bkashNumber || '01999999999',
+          bkashNumber: parsed.bkashNumber || '01913955452',
           bkashType: parsed.bkashType || 'Personal',
-          nagadNumber: parsed.nagadNumber || '01888888888',
+          bkashChargeRate: parsed.bkashChargeRate !== undefined ? parsed.bkashChargeRate : 1.85,
+          nagadNumber: parsed.nagadNumber || '01913955452',
           nagadType: parsed.nagadType || 'Personal',
-          rocketNumber: parsed.rocketNumber || '01777777777',
+          nagadChargeRate: parsed.nagadChargeRate !== undefined ? parsed.nagadChargeRate : 1.5,
+          rocketNumber: parsed.rocketNumber || '01913955452',
           rocketType: parsed.rocketType || 'Personal',
-          paymentInstructionsEn: parsed.paymentInstructionsEn || 'Please send money to our official number and input the TxnID.',
-          paymentInstructionsBn: parsed.paymentInstructionsBn || 'আমাদের অফিসিয়াল নাম্বারে টাকা সেন্ড মানি করে ট্রানজেকশন আইডি প্রদান করুন।',
+          rocketChargeRate: parsed.rocketChargeRate !== undefined ? parsed.rocketChargeRate : 1.8,
+          paymentInstructionsEn: parsed.paymentInstructionsEn || 'Please send money to our official number 01913955452 and input the TxnID.',
+          paymentInstructionsBn: parsed.paymentInstructionsBn || 'আমাদের অফিসিয়াল নাম্বারে (01913955452) টাকা সেন্ড মানি করে ট্রানজেকশন আইডি প্রদান করুন।',
+          codChargeRate: parsed.codChargeRate !== undefined ? parsed.codChargeRate : 1.0,
           maintenanceMode: parsed.maintenanceMode || false,
           orderIdPrefix: parsed.orderIdPrefix || 'TQW'
         };
@@ -171,7 +214,7 @@ export default function AdminPanel({
       logo: '',
       favicon: '',
       contactEmail: 'taqwaenterpriseoffice@gmail.com',
-      contactPhone: '01999999999',
+      contactPhone: '01913955452',
       businessHours: '10 AM - 10 PM',
       socialFacebook: 'https://facebook.com',
       socialYoutube: 'https://youtube.com',
@@ -180,14 +223,18 @@ export default function AdminPanel({
       taxRate: 0,
       currency: 'BDT',
       language: 'en',
-      bkashNumber: '01999999999',
+      bkashNumber: '01913955452',
       bkashType: 'Personal',
-      nagadNumber: '01888888888',
+      bkashChargeRate: 1.85,
+      nagadNumber: '01913955452',
       nagadType: 'Personal',
-      rocketNumber: '01777777777',
+      nagadChargeRate: 1.5,
+      rocketNumber: '01913955452',
       rocketType: 'Personal',
-      paymentInstructionsEn: 'Please send money to our official number and input the TxnID.',
-      paymentInstructionsBn: 'আমাদের অফিসিয়াল নাম্বারে টাকা সেন্ড মানি করে ট্রানজেকশন আইডি প্রদান করুন।',
+      rocketChargeRate: 1.8,
+      paymentInstructionsEn: 'Please send money to our official number 01913955452 and input the TxnID.',
+      paymentInstructionsBn: 'আমাদের অফিসিয়াল নাম্বারে (01913955452) টাকা সেন্ড মানি করে ট্রানজেকশন আইডি প্রদান করুন।',
+      codChargeRate: 1.0,
       maintenanceMode: false,
       orderIdPrefix: 'TQW'
     };
@@ -209,6 +256,7 @@ export default function AdminPanel({
         const data = await res.json();
         setCoupons(data.coupons || []);
         setBanners(data.banners || []);
+        if (onBannersChange) onBannersChange(data.banners || []);
         setUsersList(data.users || []);
         setExtendedKPIs(data.kpis || null);
         setSalesHistory(data.salesHistory || []);
@@ -295,6 +343,27 @@ export default function AdminPanel({
           }
         } catch (settingsErr) {
           console.error("Failed to load settings from server in dashboard", settingsErr);
+        }
+
+        // Fetch enterprise inventory & accounts modules
+        try {
+          const [supRes, poRes, expRes, dmgRes, accRes, sumRes] = await Promise.all([
+            fetch('/api/admin/suppliers', { headers: { 'x-user-email': currentUser?.email || '' } }),
+            fetch('/api/admin/purchases', { headers: { 'x-user-email': currentUser?.email || '' } }),
+            fetch('/api/admin/expenses', { headers: { 'x-user-email': currentUser?.email || '' } }),
+            fetch('/api/admin/damages', { headers: { 'x-user-email': currentUser?.email || '' } }),
+            fetch('/api/admin/accounts/transactions', { headers: { 'x-user-email': currentUser?.email || '' } }),
+            fetch('/api/admin/accounts/summary', { headers: { 'x-user-email': currentUser?.email || '' } })
+          ]);
+
+          if (supRes.ok) setSuppliers(await supRes.json());
+          if (poRes.ok) setPurchases(await poRes.json());
+          if (expRes.ok) setExpenses(await expRes.json());
+          if (dmgRes.ok) setDamages(await dmgRes.json());
+          if (accRes.ok) setTransactions(await accRes.json());
+          if (sumRes.ok) setAccountsSummary(await sumRes.json());
+        } catch (accErr) {
+          console.error("Failed to load inventory and accounts collections", accErr);
         }
 
       } else {
@@ -624,6 +693,183 @@ export default function AdminPanel({
     }
   };
 
+  // Enterprise Purchases & Stock In Handler
+  const handleAddPurchase = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/add-purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('ADD_PURCHASE', `Processed purchase order from supplier ID "${payload.supplierId}"`);
+        await loadDashboardData();
+        setSuccessMsg('Purchase order & stock intake successfully recorded.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to save purchase order.');
+      }
+    } catch (err) {
+      setErrorMsg('Purchase order submission failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enterprise Damages Handler
+  const handleAddDamage = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/add-damage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('RECORD_DAMAGE', `Wrote off damaged product ID "${payload.productId}"`);
+        await loadDashboardData();
+        setSuccessMsg('Damage & spoilage entry recorded and written off.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to record damage.');
+      }
+    } catch (err) {
+      setErrorMsg('Damage write-off failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteDamage = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/delete-damage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await loadDashboardData();
+        setSuccessMsg('Damage record removed.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to remove damage record.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enterprise Expenses Handler
+  const handleAddExpense = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/add-expense', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('ADD_EXPENSE', `Recorded expense "${payload.title}" ৳${payload.amount}`);
+        await loadDashboardData();
+        setSuccessMsg('Expense entry saved to ledger.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to save expense.');
+      }
+    } catch (err) {
+      setErrorMsg('Expense record failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/delete-expense', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await loadDashboardData();
+        setSuccessMsg('Expense entry deleted.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to delete expense.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enterprise Supplier Payment Handler
+  const handlePaySupplier = async (supplierId: string, amount: number, paymentMethod: string, notes?: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/pay-supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ supplierId, amount, paymentMethod, notes })
+      });
+      if (res.ok) {
+        logAdminActivity('PAY_SUPPLIER', `Paid ৳${amount} to supplier ID "${supplierId}"`);
+        await loadDashboardData();
+        setSuccessMsg('Supplier payment recorded successfully.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to record supplier payment.');
+      }
+    } catch (err) {
+      setErrorMsg('Supplier payment failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enterprise Accounts Transactions Handler
+  const handleAddTransaction = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/accounts/add-transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('ADD_TRANSACTION', `Recorded ${payload.type} transaction ৳${payload.amount}`);
+        await loadDashboardData();
+        setSuccessMsg('Transaction successfully posted to cashbook.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to save transaction.');
+      }
+    } catch (err) {
+      setErrorMsg('Transaction entry failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/accounts/delete-transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await loadDashboardData();
+        setSuccessMsg('Transaction entry deleted.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to delete transaction.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 7. Review approval Handlers
   const handleApproveReview = async (pId: string, revId: string) => {
     setLoading(true);
@@ -720,6 +966,7 @@ export default function AdminPanel({
       if (res.ok) {
         setStoreSettings(newSettings);
         localStorage.setItem('taqwa_settings', JSON.stringify(newSettings));
+        if (onSettingsChange) onSettingsChange(newSettings);
         logAdminActivity('UPDATE_SETTINGS', `Modified official hotline, delivery charges, or Tax rates`);
         setSuccessMsg('Settings saved successfully.');
       } else {
@@ -766,12 +1013,15 @@ export default function AdminPanel({
               <nav className="space-y-1 text-xs font-bold text-slate-400">
                 {[
                   { id: 'overview', label: isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard', icon: TrendingUp },
-                  { id: 'products', label: isBn ? 'পণ্য স্টক CRUD' : 'Products & Catalog', icon: ShoppingBag },
-                  { id: 'categories', label: isBn ? 'ক্যাটাগরি সাজানো' : 'Taxonomy Nodes', icon: Folder },
+                  { id: 'inventory', label: isBn ? '১। ইনভেন্টরি ম্যানেজমেন্ট' : '1. Inventory Control', icon: Package },
+                  { id: 'accounts', label: isBn ? '২। অ্যাকাউন্টস ও আয়-ব্যয়' : '2. Accounts & Finance', icon: DollarSign },
+                  { id: 'courier', label: isBn ? '৩। কুরিয়ার সার্ভিস ও বুকিং' : '3. Courier & Parcel Booking', icon: Truck },
+                  { id: 'courier-points', label: isBn ? '৪। অ্যাক্টিভ কুরিয়ার পয়েন্ট' : '4. Active Courier Points', icon: MapPin },
+                  { id: 'products', label: isBn ? 'পণ্য ক্যাটালগ' : 'Products & Catalog', icon: ShoppingBag },
                   { id: 'orders', label: isBn ? 'অর্ডার লেজার বুক' : 'Orders Ledger', icon: ShoppingBag },
+                  { id: 'categories', label: isBn ? 'ক্যাটাগরি সাজানো' : 'Taxonomy Nodes', icon: Folder },
                   { id: 'promotions', label: isBn ? 'প্রমোশন ও ডিসকাউন্ট' : 'Promos & Coupons', icon: Tag },
                   { id: 'users', label: isBn ? 'অ্যাডমিন ও ইউজার' : 'Identity Control', icon: Users },
-                  { id: 'inventory', label: isBn ? 'স্টক ও রিভিউ লগ' : 'Warehouse & Reviews', icon: Sliders },
                   { id: 'settings', label: isBn ? 'সিস্টেম সেটিংস' : 'System Settings', icon: Settings },
                   { id: 'exit', label: isBn ? 'ওয়েবসাইটে ফিরে যান' : 'Go to Website', icon: Globe },
                 ].map((link) => {
@@ -794,7 +1044,7 @@ export default function AdminPanel({
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <IconComp className="w-4 h-4 shrink-0 animate-pulse text-emerald-500" />
+                        <IconComp className="w-4 h-4 shrink-0 text-emerald-400" />
                         <span>{link.label}</span>
                       </div>
                       <ChevronRight className="w-3.5 h-3.5 opacity-50" />
@@ -841,12 +1091,15 @@ export default function AdminPanel({
           <nav className="space-y-1.5 text-xs font-bold text-slate-400">
             {[
               { id: 'overview', label: isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard', icon: TrendingUp },
-              { id: 'products', label: isBn ? 'পণ্য স্টক CRUD' : 'Products & Catalog', icon: ShoppingBag },
-              { id: 'categories', label: isBn ? 'ক্যাটাগরি সাজানো' : 'Taxonomy Nodes', icon: Folder },
+              { id: 'inventory', label: isBn ? '১। ইনভেন্টরি ম্যানেজমেন্ট' : '1. Inventory Control', icon: Package },
+              { id: 'accounts', label: isBn ? '২। অ্যাকাউন্টস ও আয়-ব্যয়' : '2. Accounts & Finance', icon: DollarSign },
+              { id: 'courier', label: isBn ? '৩। কুরিয়ার সার্ভিস ও বুকিং' : '3. Courier & Parcel Booking', icon: Truck },
+              { id: 'courier-points', label: isBn ? '৪। অ্যাক্টিভ কুরিয়ার পয়েন্ট' : '4. Active Courier Points', icon: MapPin },
+              { id: 'products', label: isBn ? 'পণ্য ক্যাটালগ' : 'Products & Catalog', icon: ShoppingBag },
               { id: 'orders', label: isBn ? 'অর্ডার লেজার বুক' : 'Orders Ledger', icon: ShoppingBag },
+              { id: 'categories', label: isBn ? 'ক্যাটাগরি সাজানো' : 'Taxonomy Nodes', icon: Folder },
               { id: 'promotions', label: isBn ? 'প্রমোশন ও ডিসকাউন্ট' : 'Promos & Coupons', icon: Tag },
               { id: 'users', label: isBn ? 'অ্যাডমিন ও ইউজার' : 'Identity Control', icon: Users },
-              { id: 'inventory', label: isBn ? 'স্টক ও রিভিউ লগ' : 'Warehouse & Reviews', icon: Sliders },
               { id: 'settings', label: isBn ? 'সিস্টেম সেটিংস' : 'System Settings', icon: Settings },
               { id: 'exit', label: isBn ? 'ওয়েবসাইটে ফিরে যান' : 'Go to Website', icon: Globe },
             ].map((link) => {
@@ -1168,7 +1421,7 @@ export default function AdminPanel({
             <OrderManagement 
               orders={orders}
               onUpdateOrderStatus={async (oId, status, paymentStatus) => {
-                await onUpdateOrderStatus(oId, status);
+                await onUpdateOrderStatus(oId, status, paymentStatus);
                 // Also post payment status updates if modified
                 if (paymentStatus) {
                   await fetch('/api/admin/update-user', {
@@ -1219,15 +1472,52 @@ export default function AdminPanel({
           )}
 
           {activeTab === 'inventory' && (
-            <InventoryAndReviews 
+            <InventoryManagement 
               products={products}
               inventoryLogs={inventoryLogs}
+              suppliers={suppliers}
+              purchases={purchases}
+              damages={damages}
               onAdjustStock={handleAdjustStock}
-              onApproveReview={handleApproveReview}
-              onRejectReview={handleRejectReview}
-              onDeleteReview={handleDeleteReview}
+              onAddPurchase={handleAddPurchase}
+              onAddDamage={handleAddDamage}
+              onDeleteDamage={handleDeleteDamage}
+              currentUserEmail={currentUser?.email}
               lang={lang}
             />
+          )}
+
+          {activeTab === 'accounts' && (
+            <AccountsManagement 
+              expenses={expenses}
+              suppliers={suppliers}
+              transactions={transactions}
+              orders={orders}
+              damages={damages}
+              onAddExpense={handleAddExpense}
+              onDeleteExpense={handleDeleteExpense}
+              onPaySupplier={handlePaySupplier}
+              onAddTransaction={handleAddTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              currentUserEmail={currentUser?.email}
+              lang={lang}
+            />
+          )}
+
+          {activeTab === 'courier' && (
+            <CourierManagement 
+              orders={orders}
+              onUpdateOrderStatus={async (oId, status, paymentStatus) => {
+                await onUpdateOrderStatus(oId, status, paymentStatus);
+                await loadDashboardData();
+              }}
+              currentUserEmail={currentUser?.email}
+              lang={lang}
+            />
+          )}
+
+          {activeTab === 'courier-points' && (
+            <CourierPointManagement lang={lang} />
           )}
 
           {activeTab === 'settings' && (

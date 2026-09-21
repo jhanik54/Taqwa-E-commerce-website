@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bell, 
   Settings, 
@@ -17,9 +17,20 @@ import {
   Info,
   CreditCard,
   CheckCircle,
-  Hash
+  Hash,
+  Cloud,
+  UploadCloud,
+  CheckCircle2,
+  RefreshCw,
+  Sparkles,
+  Trash2,
+  Database,
+  Server,
+  HardDrive
 } from 'lucide-react';
 import { StoreSettings, ActivityLog, Order, Product } from '../../types';
+import { getCloudinaryConfig, saveCloudinaryConfig, testCloudinaryConnection, uploadImage } from '../../lib/cloudinary';
+import { useAuth } from '../../context/AuthContext';
 
 interface NotificationAndSettingsProps {
   notifications: any[];
@@ -44,6 +55,74 @@ export default function NotificationAndSettings({
 }: NotificationAndSettingsProps) {
   const isBn = lang === 'bn';
   const [activeTab, setActiveTab] = useState<'notifications' | 'settings' | 'reports' | 'security'>('notifications');
+
+  const { currentUser } = useAuth();
+
+  // Database status and backup states
+  const [dbStatus, setDbStatus] = useState<any>(null);
+  const [isLoadingDbStatus, setIsLoadingDbStatus] = useState(false);
+  const [isExportingSql, setIsExportingSql] = useState(false);
+  const [dbErrorMessage, setDbErrorMessage] = useState('');
+
+  const fetchDbStatus = async () => {
+    setIsLoadingDbStatus(true);
+    setDbErrorMessage('');
+    try {
+      const res = await fetch('/api/system/db-status');
+      if (res.ok) {
+        const data = await res.json();
+        setDbStatus(data);
+      } else {
+        setDbErrorMessage(isBn ? 'ডাটাবেজ স্ট্যাটাস লোড করা যায়নি।' : 'Failed to fetch database status.');
+      }
+    } catch (err) {
+      console.error("Failed to load db status", err);
+      setDbErrorMessage(isBn ? 'ডাটাবেজ সার্ভারে কানেক্ট করা যাচ্ছে না।' : 'Could not reach database status endpoint.');
+    } finally {
+      setIsLoadingDbStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      fetchDbStatus();
+    }
+  }, [activeTab]);
+
+  const handleExportBackup = async () => {
+    if (!currentUser?.email) {
+      alert(isBn ? 'অনুগ্রহ করে প্রথমে লগইন করুন।' : 'Please authenticate first.');
+      return;
+    }
+    setIsExportingSql(true);
+    try {
+      const url = `/api/system/backup-db?email=${encodeURIComponent(currentUser.email)}`;
+      const response = await fetch(url, {
+        headers: {
+          'x-user-email': currentUser.email
+        }
+      });
+      if (!response.ok) {
+        const errJson = await response.json();
+        throw new Error(errJson.error || 'Failed to download backup');
+      }
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `taqwa_enterprise_db_backup_${new Date().toISOString().split('T')[0]}_${Date.now()}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      console.error("Backup failed:", err);
+      alert(isBn ? `ব্যাকআপ ব্যর্থ হয়েছে: ${err.message}` : `Backup failed: ${err.message}`);
+    } finally {
+      setIsExportingSql(false);
+    }
+  };
 
   // Notification states
   const [notifTitle, setNotifTitle] = useState('');
@@ -118,7 +197,7 @@ export default function NotificationAndSettings({
   const [logo, setLogo] = useState(settings?.logo || '');
   const [favicon, setFavicon] = useState(settings?.favicon || '');
   const [contactEmail, setContactEmail] = useState(settings?.contactEmail || 'taqwaenterpriseoffice@gmail.com');
-  const [contactPhone, setContactPhone] = useState(settings?.contactPhone || '01999999999');
+  const [contactPhone, setContactPhone] = useState(settings?.contactPhone || '01913955452');
   const [businessHours, setBusinessHours] = useState(settings?.businessHours || '10 AM - 10 PM');
   const [socialFacebook, setSocialFacebook] = useState(settings?.socialFacebook || 'https://facebook.com');
   const [socialYoutube, setSocialYoutube] = useState(settings?.socialYoutube || 'https://youtube.com');
@@ -127,13 +206,19 @@ export default function NotificationAndSettings({
   const [taxRate, setTaxRate] = useState<number>(settings?.taxRate || 0);
 
   // Expanded mobile banking states
-  const [bkashNumber, setBkashNumber] = useState(settings?.bkashNumber || '01999999999');
+  const [bkashNumber, setBkashNumber] = useState(settings?.bkashNumber || '01913955452');
   const [bkashType, setBkashType] = useState<'Personal' | 'Agent' | 'Merchant'>(settings?.bkashType || 'Personal');
-  const [nagadNumber, setNagadNumber] = useState(settings?.nagadNumber || '01888888888');
+  const [nagadNumber, setNagadNumber] = useState(settings?.nagadNumber || '01913955452');
   const [nagadType, setNagadType] = useState<'Personal' | 'Agent' | 'Merchant'>(settings?.nagadType || 'Personal');
-  const [rocketNumber, setRocketNumber] = useState(settings?.rocketNumber || '01777777777');
+  const [rocketNumber, setRocketNumber] = useState(settings?.rocketNumber || '01913955452');
   const [rocketType, setRocketType] = useState<'Personal' | 'Agent' | 'Merchant'>(settings?.rocketType || 'Personal');
   
+  // Gateway Charge Rates (%)
+  const [codChargeRate, setCodChargeRate] = useState<number>(settings?.codChargeRate !== undefined ? settings.codChargeRate : 1.0);
+  const [bkashChargeRate, setBkashChargeRate] = useState<number>(settings?.bkashChargeRate !== undefined ? settings.bkashChargeRate : 1.85);
+  const [nagadChargeRate, setNagadChargeRate] = useState<number>(settings?.nagadChargeRate !== undefined ? settings.nagadChargeRate : 1.5);
+  const [rocketChargeRate, setRocketChargeRate] = useState<number>(settings?.rocketChargeRate !== undefined ? settings.rocketChargeRate : 1.8);
+
   // Custom Transfer Guideline Messages states
   const [paymentInstructionsEn, setPaymentInstructionsEn] = useState(
     settings?.paymentInstructionsEn || 'Please send money to our official number and input the TxnID.'
@@ -146,8 +231,136 @@ export default function NotificationAndSettings({
   const [maintenanceMode, setMaintenanceMode] = useState<boolean>(settings?.maintenanceMode || false);
   const [orderIdPrefix, setOrderIdPrefix] = useState(settings?.orderIdPrefix || 'TQW');
 
+  // Clean Reset states
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetSuccessMsg, setResetSuccessMsg] = useState("");
+
+  const handleCleanReset = async () => {
+    setIsResetting(true);
+    setResetSuccessMsg("");
+    try {
+      const response = await fetch('/api/system/reset-demo-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        setResetSuccessMsg(isBn ? 'সব ডেমো ডাটা সফলভাবে মুছে ফেলা হয়েছে! দয়া করে ৫ সেকেন্ড অপেক্ষা করুন...' : 'Demo data successfully purged! Reloading catalog in 5 seconds...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Reset failed.');
+      }
+    } catch (err: any) {
+      alert('Error during reset: ' + err.message);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // Cloudinary Storage Config States
+  const [cloudinaryCloudName, setCloudinaryCloudName] = useState('');
+  const [cloudinaryUploadPreset, setCloudinaryUploadPreset] = useState('');
+  const [isCloudinaryActive, setIsCloudinaryActive] = useState(false);
+  const [cloudinaryTestLoading, setCloudinaryTestLoading] = useState(false);
+  const [cloudinaryTestResult, setCloudinaryTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
+
+  useEffect(() => {
+    const config = getCloudinaryConfig();
+    setCloudinaryCloudName(config.cloudName);
+    setCloudinaryUploadPreset(config.uploadPreset);
+    setIsCloudinaryActive(config.isConfigured);
+  }, []);
+
+  const handleTestCloudinary = async () => {
+    if (!cloudinaryCloudName.trim() || !cloudinaryUploadPreset.trim()) {
+      alert(isBn ? 'দয়া করে Cloud Name এবং Upload Preset প্রদান করুন।' : 'Please enter Cloud Name and Upload Preset.');
+      return;
+    }
+    setCloudinaryTestLoading(true);
+    setCloudinaryTestResult(null);
+    try {
+      const res = await testCloudinaryConnection(cloudinaryCloudName, cloudinaryUploadPreset);
+      setCloudinaryTestResult(res);
+      if (res.success) {
+        saveCloudinaryConfig(cloudinaryCloudName, cloudinaryUploadPreset);
+        setIsCloudinaryActive(true);
+      }
+    } catch (e: any) {
+      setCloudinaryTestResult({ success: false, message: e.message });
+    } finally {
+      setCloudinaryTestLoading(false);
+    }
+  };
+
+  // Logo & Favicon Upload States & Handlers
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoProgress, setLogoProgress] = useState<number | null>(null);
+  const [faviconUploading, setFaviconUploading] = useState(false);
+  const [faviconProgress, setFaviconProgress] = useState<number | null>(null);
+
+  const handleLogoUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setLogoUploading(true);
+      setLogoProgress(0);
+
+      try {
+        const url = await uploadImage(file, {
+          onProgress: (percent) => setLogoProgress(percent),
+          compress: true
+        });
+        setLogo(url);
+      } catch (err: any) {
+        alert(isBn ? `লোগো আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Logo upload failed: ${err.message}`);
+      } finally {
+        setLogoUploading(false);
+        setLogoProgress(null);
+      }
+    };
+    input.click();
+  };
+
+  const handleFaviconUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setFaviconUploading(true);
+      setFaviconProgress(0);
+
+      try {
+        const url = await uploadImage(file, {
+          onProgress: (percent) => setFaviconProgress(percent),
+          compress: true
+        });
+        setFavicon(url);
+      } catch (err: any) {
+        alert(isBn ? `ফেভিকন আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Favicon upload failed: ${err.message}`);
+      } finally {
+        setFaviconUploading(false);
+        setFaviconProgress(null);
+      }
+    };
+    input.click();
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Save Cloudinary configuration
+    saveCloudinaryConfig(cloudinaryCloudName, cloudinaryUploadPreset);
+    setIsCloudinaryActive(Boolean(cloudinaryCloudName.trim() && cloudinaryUploadPreset.trim()));
+
     await onUpdateSettings({
       storeName,
       logo,
@@ -162,13 +375,17 @@ export default function NotificationAndSettings({
       taxRate: Number(taxRate),
       currency: 'BDT',
       language: 'en',
-      // Mobile Banking Settings
+      // Mobile Banking & COD Settings
+      codChargeRate: Number(codChargeRate),
       bkashNumber,
       bkashType,
+      bkashChargeRate: Number(bkashChargeRate),
       nagadNumber,
       nagadType,
+      nagadChargeRate: Number(nagadChargeRate),
       rocketNumber,
       rocketType,
+      rocketChargeRate: Number(rocketChargeRate),
       // Custom payment rules
       paymentInstructionsEn,
       paymentInstructionsBn,
@@ -176,7 +393,7 @@ export default function NotificationAndSettings({
       maintenanceMode,
       orderIdPrefix
     });
-    alert(isBn ? 'সেটিংস সফলভাবে সংরক্ষিত হয়েছে!' : 'Core configurations saved successfully!');
+    alert(isBn ? 'সেটিংস ও Cloudinary কনফিগারেশন সফলভাবে সংরক্ষিত হয়েছে!' : 'Store settings & Cloudinary configurations saved successfully!');
   };
 
   // Reports Excel/CSV export
@@ -405,6 +622,49 @@ export default function NotificationAndSettings({
                 </div>
               </div>
 
+              {/* Logo and Favicon Configuration with Live Previews & Upload Helpers */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/50">
+                <div className="space-y-1">
+                  <label>{isBn ? 'স্টোর লোগো রিসোর্স URL (Logo)' : 'Store Logo URL'}</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={logo} onChange={(e) => setLogo(e.target.value)} className="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl font-mono text-[10px]" placeholder="https://..." />
+                    <button
+                      type="button"
+                      onClick={handleLogoUpload}
+                      disabled={logoUploading}
+                      className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-300 rounded-xl flex items-center justify-center gap-1 text-[10px] cursor-pointer"
+                    >
+                      {logoUploading ? <span>{logoProgress}%</span> : <span>Upload</span>}
+                    </button>
+                  </div>
+                  {logo && (
+                    <div className="mt-2 p-2 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 h-16 overflow-hidden">
+                      <img src={logo} alt="Logo Preview" className="max-h-12 max-w-full object-contain" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label>{isBn ? 'স্টোর ফেভিকন URL (Favicon)' : 'Store Favicon URL'}</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={favicon} onChange={(e) => setFavicon(e.target.value)} className="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl font-mono text-[10px]" placeholder="https://..." />
+                    <button
+                      type="button"
+                      onClick={handleFaviconUpload}
+                      disabled={faviconUploading}
+                      className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-300 rounded-xl flex items-center justify-center gap-1 text-[10px] cursor-pointer"
+                    >
+                      {faviconUploading ? <span>{faviconProgress}%</span> : <span>Upload</span>}
+                    </button>
+                  </div>
+                  {favicon && (
+                    <div className="mt-2 p-2 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 h-16 overflow-hidden">
+                      <img src={favicon} alt="Favicon Preview" className="max-h-12 max-w-full object-contain" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/50">
                 <div className="space-y-1">
                   <label className="flex items-center gap-1.5">
@@ -484,7 +744,7 @@ export default function NotificationAndSettings({
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[10px] uppercase">bKash Mobile Number</label>
-                    <input type="text" value={bkashNumber} onChange={(e) => setBkashNumber(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-pink-600 text-xs font-black" placeholder="e.g. 019XXXXXXXX" />
+                    <input type="text" value={bkashNumber} onChange={(e) => setBkashNumber(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-pink-600 text-xs font-black" placeholder="e.g. 01913955452" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[10px] uppercase">Account Type</label>
@@ -493,6 +753,22 @@ export default function NotificationAndSettings({
                       <option value="Agent">Agent (ক্যাশ আউট)</option>
                       <option value="Merchant">Merchant (পেমেন্ট)</option>
                     </select>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-slate-400 text-[10px] uppercase">Charge Rate (%)</label>
+                      <span className="text-[10px] font-bold text-pink-650">ডিফল্ট: ১.৮৫%</span>
+                    </div>
+                    <input 
+                      type="number" 
+                      step="0.05" 
+                      min="0" 
+                      max="10" 
+                      value={bkashChargeRate} 
+                      onChange={(e) => setBkashChargeRate(Number(e.target.value))} 
+                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" 
+                      placeholder="1.85" 
+                    />
                   </div>
                 </div>
               </div>
@@ -506,7 +782,7 @@ export default function NotificationAndSettings({
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[10px] uppercase">Nagad Mobile Number</label>
-                    <input type="text" value={nagadNumber} onChange={(e) => setNagadNumber(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-orange-600 text-xs font-black" placeholder="e.g. 018XXXXXXXX" />
+                    <input type="text" value={nagadNumber} onChange={(e) => setNagadNumber(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-orange-600 text-xs font-black" placeholder="e.g. 01913955452" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[10px] uppercase">Account Type</label>
@@ -515,6 +791,22 @@ export default function NotificationAndSettings({
                       <option value="Agent">Agent (ক্যাশ আউট)</option>
                       <option value="Merchant">Merchant (পেমেন্ট)</option>
                     </select>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-slate-400 text-[10px] uppercase">Charge Rate (%)</label>
+                      <span className="text-[10px] font-bold text-orange-650">ডিফল্ট: ১.৫%</span>
+                    </div>
+                    <input 
+                      type="number" 
+                      step="0.05" 
+                      min="0" 
+                      max="10" 
+                      value={nagadChargeRate} 
+                      onChange={(e) => setNagadChargeRate(Number(e.target.value))} 
+                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" 
+                      placeholder="1.5" 
+                    />
                   </div>
                 </div>
               </div>
@@ -528,7 +820,7 @@ export default function NotificationAndSettings({
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[10px] uppercase">Rocket Mobile Number</label>
-                    <input type="text" value={rocketNumber} onChange={(e) => setRocketNumber(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-purple-600 text-xs font-black" placeholder="e.g. 017XXXXXXXX" />
+                    <input type="text" value={rocketNumber} onChange={(e) => setRocketNumber(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-purple-600 text-xs font-black" placeholder="e.g. 01913955452" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[10px] uppercase">Account Type</label>
@@ -538,13 +830,114 @@ export default function NotificationAndSettings({
                       <option value="Merchant">Merchant (পেমেন্ট)</option>
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-slate-400 text-[10px] uppercase">Charge Rate (%)</label>
+                      <span className="text-[10px] font-bold text-purple-650">ডিফল্ট: ১.৮%</span>
+                    </div>
+                    <input 
+                      type="number" 
+                      step="0.05" 
+                      min="0" 
+                      max="10" 
+                      value={rocketChargeRate} 
+                      onChange={(e) => setRocketChargeRate(Number(e.target.value))} 
+                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" 
+                      placeholder="1.8" 
+                    />
+                  </div>
                 </div>
               </div>
 
             </div>
           </div>
 
-          {/* 4. Payment transfer guidelines Custom message */}
+          {/* 4. Cloudinary Cloud Storage Configuration Card */}
+          <div className="space-y-4 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-950 text-white p-4 sm:p-6 rounded-2xl shadow-md border border-slate-700">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-700/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                  <Cloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white flex items-center gap-2">
+                    <span>{isBn ? 'Cloudinary ক্লাউড ইমেজ স্টোরেজ' : 'Cloudinary Media CDN Storage'}</span>
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 uppercase">
+                      {isCloudinaryActive ? (isBn ? 'সক্রিয় (Active)' : 'Active') : (isBn ? 'অফলাইন স্যান্ডবক্স' : 'Local Fallback')}
+                    </span>
+                  </h4>
+                  <p className="text-[10px] text-slate-300 font-medium">
+                    {isBn ? 'প্রোডাক্ট ছবি, ব্যানার ও অবতার সরাসরি ক্লাউডে সেভ ও সুপারফাস্ট ডেলিভারির জন্য।' : 'High-speed cloud image hosting & optimization for products, banners and avatars.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={cloudinaryTestLoading}
+                  onClick={handleTestCloudinary}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${cloudinaryTestLoading ? 'animate-spin' : ''}`} />
+                  <span>{cloudinaryTestLoading ? (isBn ? 'যাচাই হচ্ছে...' : 'Testing...') : (isBn ? 'কানেকশন টেস্ট করুন' : 'Test Connection')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Form inputs for Cloudinary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">
+                  {isBn ? 'Cloudinary Cloud Name *' : 'Cloudinary Cloud Name *'}
+                </label>
+                <input
+                  type="text"
+                  value={cloudinaryCloudName}
+                  onChange={(e) => setCloudinaryCloudName(e.target.value.trim())}
+                  placeholder="e.g. dxyz12345"
+                  className="w-full p-2.5 bg-slate-800/90 border border-slate-600 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 rounded-xl text-white font-mono text-xs placeholder-slate-500"
+                />
+                <p className="text-[10px] text-slate-400">
+                  {isBn ? 'আপনার Cloudinary Dashboard-এর Cloud Name।' : 'From your Cloudinary Dashboard account overview.'}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">
+                  {isBn ? 'Unsigned Upload Preset Name *' : 'Unsigned Upload Preset Name *'}
+                </label>
+                <input
+                  type="text"
+                  value={cloudinaryUploadPreset}
+                  onChange={(e) => setCloudinaryUploadPreset(e.target.value.trim())}
+                  placeholder="e.g. taqwa_unsigned_preset"
+                  className="w-full p-2.5 bg-slate-800/90 border border-slate-600 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 rounded-xl text-white font-mono text-xs placeholder-slate-500"
+                />
+                <p className="text-[10px] text-slate-400">
+                  {isBn ? 'Cloudinary Settings > Upload > Upload Presets থেকে তৈরি করা Unsigned Preset।' : 'Must be set to "Unsigned" mode in Cloudinary settings.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Test result banner if available */}
+            {cloudinaryTestResult && (
+              <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 border ${
+                cloudinaryTestResult.success 
+                  ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300' 
+                  : 'bg-red-950/60 border-red-500/50 text-red-300'
+              }`}>
+                {cloudinaryTestResult.success ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                )}
+                <span>{cloudinaryTestResult.message}</span>
+              </div>
+            )}
+          </div>
+
+          {/* 5. Payment transfer guidelines Custom message */}
           <div className="space-y-4 bg-slate-50 border border-slate-150 p-4 sm:p-5 rounded-2xl">
             <h4 className="text-slate-800 text-sm font-black flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
               <Info className="w-4.5 h-4.5 text-emerald-600" />
@@ -560,6 +953,128 @@ export default function NotificationAndSettings({
                 <label>{isBn ? 'বাংলা নির্দেশাবলী কন্টেন্ট *' : 'Bangla Payment Instructions *'}</label>
                 <textarea required value={paymentInstructionsBn} onChange={(e) => setPaymentInstructionsBn(e.target.value)} className="w-full h-24 p-2.5 bg-white border border-slate-200 rounded-xl resize-none font-medium text-slate-700" placeholder="চেকআউট করার সময় বাংলা ব্যবহারকারী যে নির্দেশ দেখতে পাবে..."></textarea>
               </div>
+            </div>
+          </div>
+
+          {/* 5. Payment transfer guidelines Custom message */}
+          <div className="space-y-4 bg-slate-50 border border-slate-150 p-4 sm:p-5 rounded-2xl">
+            <h4 className="text-slate-800 text-sm font-black flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
+              <Info className="w-4.5 h-4.5 text-emerald-600" />
+              <span>{isBn ? 'গ্রাহকদের জন্য চেকআউট পেমেন্ট নির্দেশনা' : 'Customer-Facing Payment Instructions'}</span>
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label>{isBn ? 'ইংলিশ নির্দেশাবলী কন্টেন্ট *' : 'English Payment Instructions *'}</label>
+                <textarea required value={paymentInstructionsEn} onChange={(e) => setPaymentInstructionsEn(e.target.value)} className="w-full h-24 p-2.5 bg-white border border-slate-200 rounded-xl resize-none font-medium text-slate-700" placeholder="Instructions seen by english users on checkout..."></textarea>
+              </div>
+              <div className="space-y-1">
+                <label>{isBn ? 'বাংলা নির্দেশাবলী কন্টেন্ট *' : 'Bangla Payment Instructions *'}</label>
+                <textarea required value={paymentInstructionsBn} onChange={(e) => setPaymentInstructionsBn(e.target.value)} className="w-full h-24 p-2.5 bg-white border border-slate-200 rounded-xl resize-none font-medium text-slate-700" placeholder="চেকআউট করার সময় বাংলা ব্যবহারকারী যে নির্দেশ দেখতে পাবে..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* 6. Live Database Backup & Health Center */}
+          <div className="space-y-4 bg-slate-50 border border-slate-150 p-4 sm:p-5 rounded-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200/60 pb-2 gap-2">
+              <h4 className="text-slate-800 text-sm font-black flex items-center gap-1.5">
+                <Database className="w-4.5 h-4.5 text-emerald-600 animate-pulse" />
+                <span>{isBn ? 'MySQL ডাটাবেজ হেলথ ও ব্যাকআপ প্যানেল' : 'MySQL Database Health & Backup Center'}</span>
+              </h4>
+              <button 
+                type="button" 
+                onClick={fetchDbStatus} 
+                disabled={isLoadingDbStatus}
+                className="text-[10px] font-black text-slate-500 hover:text-emerald-600 flex items-center gap-1 bg-white hover:bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg shadow-sm transition-all cursor-pointer self-start sm:self-auto"
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoadingDbStatus ? 'animate-spin text-emerald-600' : ''}`} />
+                <span>{isBn ? 'রিফ্রেশ করুন' : 'Refresh Connection'}</span>
+              </button>
+            </div>
+
+            {dbErrorMessage && (
+              <div className="p-3 bg-rose-50 border border-rose-150 rounded-xl text-rose-700 text-[11px] font-semibold flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                <span>{dbErrorMessage}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Status Spec */}
+              <div className="bg-white p-3.5 border border-slate-150 rounded-xl space-y-2">
+                <p className="text-[10px] uppercase text-slate-400 tracking-wider font-extrabold">{isBn ? 'সার্ভার কানেকশন' : 'Connection Status'}</p>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${dbStatus?.mysql?.connected ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
+                  <span className="text-xs font-black text-slate-800">
+                    {dbStatus?.mysql?.connected 
+                      ? (isBn ? 'কানেক্টেড (MySQL)' : 'Connected (Active MySQL)') 
+                      : (isBn ? 'অফলাইন ফলব্যাক মোড' : 'Offline Fallback Active')}
+                  </span>
+                </div>
+                <div className="text-[10px] font-mono text-slate-500 space-y-0.5 leading-normal">
+                  <div className="flex items-center gap-1 text-slate-600">
+                    <Server className="w-3 h-3" />
+                    <span>Host: {dbStatus?.mysql?.host || 'Local persistent state'}</span>
+                  </div>
+                  <div>Database: {dbStatus?.mysql?.database || 'None'}</div>
+                  <div>Port: {dbStatus?.mysql?.port || 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* Data Statistics */}
+              <div className="bg-white p-3.5 border border-slate-150 rounded-xl space-y-2 col-span-2">
+                <p className="text-[10px] uppercase text-slate-400 tracking-wider font-extrabold">{isBn ? 'লাইভ ডাটা রেকর্ড স্ট্যাটিস্টিকস' : 'Active Database Records Metrics'}</p>
+                
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="block text-sm font-black text-emerald-700">{dbStatus?.localFilesystem?.productsCount ?? products.length}</span>
+                    <span className="text-[9px] text-slate-500 font-extrabold">{isBn ? 'মোট পণ্য' : 'Products'}</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="block text-sm font-black text-indigo-700">{dbStatus?.localFilesystem?.ordersCount ?? orders.length}</span>
+                    <span className="text-[9px] text-slate-500 font-extrabold">{isBn ? 'মোট অর্ডার' : 'Orders'}</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="block text-sm font-black text-sky-700">{dbStatus?.localFilesystem?.usersCount ?? 0}</span>
+                    <span className="text-[9px] text-slate-500 font-extrabold">{isBn ? 'মোট ইউজার' : 'Staffs'}</span>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                  {isBn 
+                    ? '* হোস্টিংগার MySQL ডাটাবেজ ডিসকনেক্ট থাকলে সিস্টেম স্বয়ংক্রিয়ভাবে লোকাল ফলব্যাক মোডে ডেটা সেভ রাখবে।' 
+                    : '* If MySQL is disconnected, Taqwa Core fallback automatically serves data locally with zero downtime.'}
+                </p>
+              </div>
+
+            </div>
+
+            {/* Back Up Button Trigger */}
+            <div className="pt-2">
+              <button 
+                type="button"
+                onClick={handleExportBackup}
+                disabled={isExportingSql || !dbStatus?.mysql?.connected}
+                className={`w-full p-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 border shadow-sm transition-all duration-200 cursor-pointer ${
+                  dbStatus?.mysql?.connected
+                    ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-800 hover:scale-[1.005]'
+                    : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <Download className={`w-4 h-4 ${isExportingSql ? 'animate-bounce' : ''}`} />
+                <span>
+                  {isExportingSql 
+                    ? (isBn ? 'ব্যাকআপ জেনারেট হচ্ছে...' : 'Generating SQL Dump...') 
+                    : (isBn ? '১-ক্লিকে ডাটাবেজ ব্যাকআপ ডাউনলোড করুন' : '1-Click Download SQL Database Backup')}
+                </span>
+              </button>
+              <p className="text-[9.5px] text-slate-500 font-medium mt-1.5 leading-relaxed">
+                {isBn 
+                  ? '⚠️ নিরাপত্তা নির্দেশিকা: লাইভ ডাটাবেজের এই ডাম্প (.sql) ফাইলে কাস্টমার তালিকা, ইনভেন্টরি ক্যাটালগ ও হিসাবের বিবরণী সুরক্ষিত রয়েছে। ব্যাকআপটি বিশ্বস্ত ডিভাইসে ডাউনলোড ও নিরাপদ স্থানে সংরক্ষণ করুন।' 
+                  : '⚠️ Security Guideline: This .sql dump file includes complete user directory, product stock inventory, and orders ledger. Keep this file in a highly secure destination.'}
+              </p>
             </div>
           </div>
 
@@ -640,7 +1155,67 @@ export default function NotificationAndSettings({
           SECURITY TAB (AUDIT LOGS)
          ======================================= */}
       {activeTab === 'security' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-6 animate-fade-in">
+          {/* 1-Click Demo Data Clean Reset Panel */}
+          <div className="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-6 space-y-4">
+            <div className="flex gap-3 items-start">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="text-sm font-extrabold text-rose-950">
+                  {isBn ? '১-ক্লিকে টেস্ট ডাটা রিসেট (Demo Data Clean Reset)' : '1-Click Demo Data Clean Reset'}
+                </h4>
+                <p className="text-xs text-rose-800 leading-relaxed">
+                  {isBn 
+                    ? 'এই অপারেশনটি আপনার স্টোর থেকে সকল ডেমো পণ্য, কুপন, ভুয়া অর্ডার এবং টেস্ট কাস্টমার অ্যাকাউন্টগুলো ডাটাবেজ থেকে চিরতরে মুছে ফেলবে। এটি সম্পন্ন করার পর আপনার ওয়েবসাইটটি একদম নতুন ও সম্পূর্ণ ফ্রেশ অবস্থায় আপনার আসল পণ্য বিক্রির জন্য প্রস্তুত হবে।' 
+                    : 'This utility permanently deletes all dummy products, demo orders, test accounts, and associated statistics from the system database. This action is final and irreversible.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Inline Confirmation Toggle */}
+            <div className="pt-2 border-t border-rose-200/40">
+              {resetSuccessMsg ? (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>{resetSuccessMsg}</span>
+                </div>
+              ) : showResetConfirm ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/65 p-4 rounded-xl border border-rose-200 animate-pulse">
+                  <span className="text-xs font-black text-rose-900">
+                    {isBn ? '⚠️ আপনি কি নিশ্চিতভাবে সব ডেমো ডেটা মুছে দিতে চান?' : '⚠️ Are you absolutely sure you want to wipe all demo records?'}
+                  </span>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      type="button"
+                      disabled={isResetting}
+                      onClick={handleCleanReset}
+                      className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-lg transition duration-200 flex items-center gap-1"
+                    >
+                      {isResetting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                      <span>{isBn ? 'হ্যাঁ, সম্পূর্ণ মুছে ফেলুন' : 'Yes, Delete All'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowResetConfirm(false)}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-lg transition duration-200"
+                    >
+                      {isBn ? 'বাতিল' : 'Cancel'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowResetConfirm(true)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs rounded-xl border border-rose-200 transition duration-200 shadow-2xs hover:shadow-xs"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>{isBn ? 'সব ডেমো ও ডামি ডাটা ডিলিট করুন' : 'Clean & Reset Store Database'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           <div>
             <h4 className="font-extrabold text-slate-800 text-xs sm:text-sm">{isBn ? 'অ্যাডমিন কার্যক্রম অডিট লগ' : 'Security Activity Audit Trails'}</h4>
             <p className="text-[10px] text-slate-400 font-bold">{isBn ? 'স্টোর ব্যবস্থাপনায় অ্যাডমিনদের সকল কার্যক্রমের বিবরণী ট্র্যাকার।' : 'Cryptographically secure trace records of administrative catalog edits.'}</p>

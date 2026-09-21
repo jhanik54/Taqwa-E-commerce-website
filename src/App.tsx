@@ -15,7 +15,6 @@ import {
   Check,
   HelpCircle,
   Clock,
-  Heart,
   X,
   ChevronLeft,
   ChevronRight,
@@ -23,9 +22,8 @@ import {
   Home,
   Grid,
   Bird,
-  Cat,
-  Fish,
-  Rabbit,
+  Feather,
+  Pill,
   Activity,
   Shield,
   RefreshCw,
@@ -47,65 +45,34 @@ import ProfileModal from './components/ProfileModal';
 import ProductDetailsPage from './components/ProductDetailsPage';
 import CartPage from './components/CartPage';
 import ProfilePage from './components/ProfilePage';
+import InstallWizard from './components/InstallWizard';
 import { Product, CartItem, Order, User, ChatMessage, StoreNotification } from './types';
 import { useAuth } from './context/AuthContext';
 import VerificationScreen from './components/VerificationScreen';
 import { isFirebaseConfigured, db } from './lib/firebase';
 import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
-
-
-const HERO_SLIDES = [
-  {
-    id: 1,
-    titleEn: "Healthy Diets for Happy Birds",
-    titleBn: "পাখির সুস্বাস্থ্য ও দীর্ঘায়ুর শতভাগ নিশ্চয়তা!",
-    descEn: "Premium natural seed mixes, golden millets, and organic color-enhancing drops.",
-    descBn: "আমাদের প্রিমিয়াম মিক্সড দানা বীজ এবং ভাইব্রেন্ট পালক উজ্জ্বল করার ভাইটামিন ড্রপস।",
-    ctaEn: "Shop Premium Seeds",
-    ctaBn: "পাখির দানা কিনুন",
-    image: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=800",
-    accentBg: "from-emerald-800 to-teal-900"
-  },
-  {
-    id: 2,
-    titleEn: "Premium Cat Nutrition",
-    titleBn: "বিড়ালের রেশমি লোম ও চমৎকার বৃদ্ধির সুষম খাদ্য!",
-    descEn: "Imported high-protein dry kitten foods and grain-free savory wet cups.",
-    descBn: "উচ্চ প্রোটিন ড্রাই ক্যাট ফুড এবং ওমেগা সমৃদ্ধ পুষ্টিকর গ্রেভি ওয়েট কাপস।",
-    ctaEn: "Explore Cat Foods",
-    ctaBn: "ক্যাট ফুড দেখুন",
-    image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800",
-    accentBg: "from-slate-800 to-teal-950"
-  },
-  {
-    id: 3,
-    titleEn: "Fresh Timothy Hay & Pellets",
-    titleBn: "খরগোশের হজম ও দাঁতের যত্নে আসল ঘাস!",
-    descEn: "100% natural sun-dried select Timothy cuts and high-fiber digestive pellets.",
-    descBn: "১০০% প্রাকৃতিক রোদে শুকানো মিষ্টি সুবাসিত আলফালফা ও টিমোথি ঘাস।",
-    ctaEn: "Browse Timothy Hay",
-    ctaBn: "খরগোশের খাবার কিনুন",
-    image: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=800",
-    accentBg: "from-emerald-900 to-teal-950"
-  }
-];
+import HeroBanner, { HERO_SLIDES } from './components/HeroBanner';
+import { DEFAULT_PRODUCT_IMAGE } from './lib/cloudinary';
 
 function ProductSkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-3 shadow-xs flex flex-col h-[420px] overflow-hidden justify-between animate-pulse">
-      <div className="h-[255px] w-full bg-slate-100 rounded-xl mb-3 shrink-0"></div>
-      <div className="flex-1 flex flex-col justify-between">
+    <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs flex flex-col h-full overflow-hidden animate-pulse">
+      <div className="w-full aspect-square bg-slate-100 shrink-0"></div>
+      <div className="p-3 flex-1 flex flex-col justify-between space-y-3">
         <div className="space-y-2">
-          <div className="h-3 bg-slate-100 rounded-md w-1/3"></div>
-          <div className="h-4 bg-slate-100 rounded-md w-3/4"></div>
-          <div className="h-4 bg-slate-100 rounded-md w-1/2"></div>
-        </div>
-        <div className="flex items-center justify-between pt-2 border-t border-slate-50 mt-2">
-          <div className="space-y-1">
-            <div className="h-4 bg-slate-100 rounded-md w-16"></div>
-            <div className="h-3 bg-slate-100 rounded-md w-10"></div>
+          <div className="flex justify-between items-center">
+            <div className="h-3 bg-slate-100 rounded w-1/3"></div>
+            <div className="h-3 bg-slate-100 rounded w-1/6"></div>
           </div>
-          <div className="w-9 h-9 bg-slate-100 rounded-lg"></div>
+          <div className="h-4 bg-slate-100 rounded w-4/5"></div>
+          <div className="h-3 bg-slate-100 rounded w-1/2"></div>
+        </div>
+        <div className="pt-2 border-t border-slate-100 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="h-5 bg-slate-100 rounded w-16"></div>
+            <div className="w-8 h-8 bg-slate-100 rounded-lg"></div>
+          </div>
+          <div className="h-8 bg-slate-100 rounded-lg w-full"></div>
         </div>
       </div>
     </div>
@@ -119,6 +86,18 @@ export default function App() {
   const [isAdminView, setIsAdminView] = useState<boolean>(false);
   const [hasUserExitedAdmin, setHasUserExitedAdmin] = useState<boolean>(false);
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname || '/');
+  const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
+
+  // Dynamic Settings and Banners State
+  const [settings, setSettings] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('taqwa_settings');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [banners, setBanners] = useState<any[]>([]);
 
   // Push state navigation helper
   const navigate = (path: string) => {
@@ -139,9 +118,6 @@ export default function App() {
       } else if (path === '/track') {
         setIsAdminView(false);
         setActiveTab('track');
-      } else if (path === '/wishlist') {
-        setIsAdminView(false);
-        setActiveTab('wishlist');
       } else if (path === '/my-orders') {
         setIsAdminView(false);
         setActiveTab('my-orders');
@@ -159,6 +135,7 @@ export default function App() {
 
   // Products, Search, Filter States
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
@@ -256,9 +233,8 @@ export default function App() {
     };
   }, [hasMore, isLoadingMore, products, visibleProductsCount]);
   
-  // Shopping Cart & Wishlist States
+  // Shopping Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Auth States from Production Firebase context
@@ -357,6 +333,19 @@ export default function App() {
 
   // Fetch initial catalog on mount
   useEffect(() => {
+    fetch('/api/system/install-status')
+      .then(res => res.json())
+      .then(data => {
+        setIsInstalled(data.configured);
+        if (data.superAdminEmail) {
+          localStorage.setItem('taqwa_super_admin_email', data.superAdminEmail);
+        }
+      })
+      .catch(err => {
+        console.error("Install status check failed", err);
+        setIsInstalled(true); // default to true if check fails to prevent lockout
+      });
+
     fetchProducts();
     getSyncStatus();
     fetch('/api/settings')
@@ -365,33 +354,55 @@ export default function App() {
       })
       .then(data => {
         if (data) {
+          setSettings(data);
           localStorage.setItem('taqwa_settings', JSON.stringify(data));
         }
       })
       .catch(err => console.error("Settings load issue", err));
+
+    fetch('/api/banners')
+      .then(res => {
+        if (res.ok) return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBanners(data);
+        }
+      })
+      .catch(err => console.error("Banners load issue", err));
   }, []);
+
+  // Synchronize document title and favicon dynamically
+  useEffect(() => {
+    if (settings) {
+      if (settings.storeName) {
+        document.title = settings.storeName;
+      }
+      if (settings.favicon) {
+        let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        link.href = settings.favicon;
+      }
+    }
+  }, [settings]);
 
   // Sync state whenever category or search query updates
   useEffect(() => {
     fetchProducts();
   }, [activeCategory, searchQuery]);
 
-  // Load / Store cart & wishlist from LocalStorage to satisfy offline stability
+  // Load / Store cart from LocalStorage to satisfy offline stability
   useEffect(() => {
     const savedCart = localStorage.getItem('taqwa_cart');
-    const savedWishlist = localStorage.getItem('taqwa_wishlist');
     if (savedCart) {
       try {
         setCart(JSON.parse(savedCart));
       } catch (e) {
         console.error("Cart retrieval issue");
-      }
-    }
-    if (savedWishlist) {
-      try {
-        setWishlist(JSON.parse(savedWishlist));
-      } catch (e) {
-        console.error("Wishlist retrieval issue");
       }
     }
   }, []);
@@ -401,50 +412,9 @@ export default function App() {
     localStorage.setItem('taqwa_cart', JSON.stringify(updatedCart));
   };
 
-  const handleToggleWishlist = (product: Product) => {
-    setWishlist(prev => {
-      const isAlreadyFav = prev.includes(product.id);
-      const updated = isAlreadyFav 
-        ? prev.filter(id => id !== product.id) 
-        : [...prev, product.id];
-      localStorage.setItem('taqwa_wishlist', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  // Fetch products from server endpoint or Firestore (Original Mode)
+  // Fetch products from server endpoint and merge with Firestore
   const fetchProducts = async () => {
-    if (isFirebaseConfigured && db) {
-      try {
-        console.log("Original Mode: Loading products from Firestore...");
-        const querySnapshot = await getDocs(collection(db, 'products'));
-        const firestoreProducts: Product[] = [];
-        querySnapshot.forEach((docSnap) => {
-          firestoreProducts.push(docSnap.data() as Product);
-        });
-
-        if (firestoreProducts.length > 0) {
-          // Client-side filtering based on category and search
-          let filtered = firestoreProducts;
-          if (activeCategory !== 'all') {
-            filtered = filtered.filter(p => p.category === activeCategory);
-          }
-          if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(p => 
-              p.name.toLowerCase().includes(query) || 
-              (p.banglaName && p.banglaName.includes(query)) ||
-              (p.description && p.description.toLowerCase().includes(query))
-            );
-          }
-          setProducts(filtered);
-          return; // successfully loaded from Firestore!
-        }
-      } catch (firestoreErr) {
-        console.warn("Firestore products fetch failed, falling back to Express API:", firestoreErr);
-      }
-    }
-
+    setIsLoadingProducts(true);
     try {
       let url = '/api/products';
       const params = new URLSearchParams();
@@ -452,12 +422,50 @@ export default function App() {
       if (searchQuery) params.append('search', searchQuery);
       
       const res = await fetch(`${url}?${params.toString()}`);
+      let apiProducts: Product[] = [];
       if (res.ok) {
-        const data = await res.json();
-        setProducts(data);
+        apiProducts = await res.json();
       }
+
+      if (isFirebaseConfigured && db) {
+        try {
+          const querySnapshot = await getDocs(collection(db, 'products'));
+          const firestoreProducts: Product[] = [];
+          querySnapshot.forEach((docSnap) => {
+            firestoreProducts.push(docSnap.data() as Product);
+          });
+
+          if (firestoreProducts.length > 0) {
+            let filteredFirestore = firestoreProducts;
+            if (activeCategory !== 'all') {
+              filteredFirestore = filteredFirestore.filter(p => p.category === activeCategory);
+            }
+            if (searchQuery) {
+              const query = searchQuery.toLowerCase();
+              filteredFirestore = filteredFirestore.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                (p.banglaName && p.banglaName.includes(query)) ||
+                (p.description && p.description.toLowerCase().includes(query))
+              );
+            }
+            
+            // Merge maps by id giving precedence to Firestore edits while retaining base catalog
+            const mergedMap = new Map<string, Product>();
+            apiProducts.forEach(p => mergedMap.set(p.id, p));
+            filteredFirestore.forEach(p => mergedMap.set(p.id, p));
+            setProducts(Array.from(mergedMap.values()));
+            return;
+          }
+        } catch (firestoreErr) {
+          console.warn("Firestore products fetch failed, using Express API products:", firestoreErr);
+        }
+      }
+
+      setProducts(apiProducts);
     } catch (e) {
-      console.error("Fetch products failed");
+      console.error("Fetch products failed:", e);
+    } finally {
+      setIsLoadingProducts(false);
     }
   };
 
@@ -649,8 +657,14 @@ export default function App() {
       await fetchProducts();
       await fetchAdminDashboard();
     } else {
-      const err = await res.json();
-      throw new Error(err.error || "Could not add product");
+      let errorMsg = "Could not add product";
+      try {
+        const err = await res.json();
+        errorMsg = err.error || errorMsg;
+      } catch {
+        errorMsg = `Server error (${res.status} ${res.statusText || 'Failed'})`;
+      }
+      throw new Error(errorMsg);
     }
   };
 
@@ -683,8 +697,14 @@ export default function App() {
       await fetchProducts();
       await fetchAdminDashboard();
     } else {
-      const err = await res.json();
-      throw new Error(err.error || "Could not update product");
+      let errorMsg = "Could not update product";
+      try {
+        const err = await res.json();
+        errorMsg = err.error || errorMsg;
+      } catch {
+        errorMsg = `Server error (${res.status} ${res.statusText || 'Failed'})`;
+      }
+      throw new Error(errorMsg);
     }
   };
 
@@ -851,7 +871,7 @@ export default function App() {
   };
 
   const handleSetActiveTab = (tab: string) => {
-    if (['my-orders', 'wishlist', 'profile'].includes(tab) && !isLoggedIn) {
+    if (['my-orders', 'profile'].includes(tab) && !isLoggedIn) {
       setIsRegisterMode(false);
       setIsForgotPasswordMode(false);
       setIsLoginModalOpen(true);
@@ -864,8 +884,6 @@ export default function App() {
 
     if (tab === 'track') {
       navigate('/track');
-    } else if (tab === 'wishlist') {
-      navigate('/wishlist');
     } else if (tab === 'my-orders') {
       navigate('/my-orders');
     } else if (tab === 'profile') {
@@ -908,15 +926,6 @@ export default function App() {
     saveCartToStorage(updated);
   };
 
-  // Wishlist toggle
-  const toggleWishlist = (pId: string) => {
-    if (wishlist.includes(pId)) {
-      setWishlist(wishlist.filter(id => id !== pId));
-    } else {
-      setWishlist([...wishlist, pId]);
-    }
-  };
-
   // Review submission handler
   const handleReviewSubmit = async (pId: string, userName: string, rating: number, comment: string, reviewId?: string) => {
     const res = await fetch(`/api/products/${pId}/review`, {
@@ -933,12 +942,18 @@ export default function App() {
 
   // Instant Buy Now routing flow
   const handleBuyNow = (product: Product) => {
-    const existing = cart.find(item => item.id === product.id);
-    if (!existing) {
-      const updated = [...cart, { ...product, quantity: 1 }];
-      setCart(updated);
-      saveCartToStorage(updated);
+    const existing = cart.find(item => item.product.id === product.id);
+    let updated: CartItem[];
+    if (existing) {
+      updated = cart.map(item =>
+        item.product.id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+    } else {
+      updated = [...cart, { product, quantity: 1 }];
     }
+    saveCartToStorage(updated);
     setIsCartOpen(false);
     setIsCheckoutModalOpen(true);
   };
@@ -1093,8 +1108,7 @@ export default function App() {
       loginTitle: 'Secure Customer Sign-In',
       registerTitle: 'Create Verified Account',
       orRegister: 'Don\'t have an account? Sign up',
-      orLogin: 'Already registered? Sign in',
-      wishlist: 'Saved Item list'
+      orLogin: 'Already registered? Sign in'
     },
     bn: {
       categories: 'ক্যাটাগরিসমূহ',
@@ -1123,20 +1137,17 @@ export default function App() {
       loginTitle: 'নিরাপদ গ্রাহক লগইন চ্যানেল',
       registerTitle: 'নতুন গ্রাহক রেজিস্টার একাউন্ট',
       orRegister: 'কোনো একাউন্ট নেই? নতুন একাউন্ট খুলুন',
-      orLogin: 'ইতিমধ্যে একাউন্ট আছে? লগইন করুন',
-      wishlist: 'পছন্দনীয় উইশলিস্ট'
+      orLogin: 'ইতিমধ্যে একাউন্ট আছে? লগইন করুন'
     }
   };
 
   // Filter Categories labels helper
   const filterTabs = [
-    { key: 'all', en: 'All Products', bn: 'সব পণ্য' },
-    { key: 'cats', en: 'Cats Diet', bn: 'বিড়ালের খাবার' },
-    { key: 'birds', en: 'Birds Seed', bn: 'পাখির দানা' },
-    { key: 'fish', en: 'Fish Pellets', bn: 'মাছের খাবার' },
-    { key: 'rabbits', en: 'Rabbit Hay', bn: 'খরগোশের ঘাস' },
-    { key: 'accessories', en: 'Accessories', bn: 'সাজসজ্জা ও খাঁচা' },
-    { key: 'supplements', en: 'Supplements', bn: 'ভিটামিন ও ঔষধ' }
+    { key: 'all', en: 'All Products', bn: 'সব পণ্য', icon: '🌟' },
+    { key: 'pigeons', en: 'Pigeon Feed', bn: 'কবুতরের খাবার', icon: '🕊️' },
+    { key: 'birds', en: 'Bird Feed', bn: 'পাখির খাবার', icon: '🦜' },
+    { key: 'medicine', en: 'Medicine', bn: 'ঔষধ ও কেয়ার', icon: '💊' },
+    { key: 'accessories', en: 'Accessories', bn: 'এক্সেসরিজ', icon: '🥣' }
   ];
 
   // Calculated variables
@@ -1166,6 +1177,43 @@ export default function App() {
     return list;
   }, [products, maxPrice, inStockOnly, sortBy]);
 
+  // Curated product selectors for homepage sections (animal feed, bird feed, best sellers)
+  const featuredAnimalFeed = useMemo(() => {
+    const list = products.filter(p => 
+      p.category === 'pigeons' || 
+      p.category === 'cats' || 
+      p.category === 'rabbits' ||
+      (p.name && p.name.toLowerCase().includes('pigeon')) ||
+      (p.name && p.name.toLowerCase().includes('rabbit')) ||
+      (p.name && p.name.toLowerCase().includes('cat')) ||
+      (p.banglaName && p.banglaName.includes('কবুতর')) ||
+      (p.banglaName && p.banglaName.includes('প্রাণী')) ||
+      (p.banglaName && p.banglaName.includes('বিড়াল')) ||
+      (p.banglaName && p.banglaName.includes('খরগোশ'))
+    );
+    if (list.length > 0) return list;
+    return products.filter(p => p.category !== 'birds');
+  }, [products]);
+
+  const featuredBirdFeed = useMemo(() => {
+    const list = products.filter(p => 
+      p.category === 'birds' || 
+      (p.name && p.name.toLowerCase().includes('bird')) || 
+      (p.name && p.name.toLowerCase().includes('seed')) ||
+      (p.name && p.name.toLowerCase().includes('sunflower')) ||
+      (p.banglaName && p.banglaName.includes('পাখি')) ||
+      (p.banglaName && p.banglaName.includes('বীজ'))
+    );
+    if (list.length > 0) return list;
+    return products.filter(p => p.category === 'birds');
+  }, [products]);
+
+  const bestSellingList = useMemo(() => {
+    const list = products.filter(p => p.bestSeller);
+    if (list.length >= 4) return list;
+    return [...products].sort((a, b) => (b.reviewsCount || 0) - (a.reviewsCount || 0));
+  }, [products]);
+
   // Maintenance Mode calculation
   const isMaintenanceActive = useMemo(() => {
     try {
@@ -1184,7 +1232,7 @@ export default function App() {
   const showMaintenance = isMaintenanceActive && !isUserStaff && !isAdminView;
 
   if (showMaintenance) {
-    let supportPhone = '01999999999';
+    let supportPhone = '01913955452';
     let supportEmail = 'taqwaenterpriseoffice@gmail.com';
     try {
       const cached = localStorage.getItem('taqwa_settings');
@@ -1250,7 +1298,7 @@ export default function App() {
                         id: 'usr-offline',
                         name: 'Taqwa Supervisor',
                         email: emailInput,
-                        phone: '01999999999',
+                        phone: '01913955452',
                         role: 'Super Admin',
                         joinedAt: new Date().toISOString()
                       };
@@ -1284,8 +1332,20 @@ export default function App() {
     );
   }
 
+  if (isInstalled === false || currentPath === '/install') {
+    return (
+      <InstallWizard 
+        onSuccess={() => {
+          setIsInstalled(true);
+          navigate('/');
+          window.location.reload();
+        }} 
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased" id="taqwa-app-root">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased overflow-x-hidden w-full" id="taqwa-app-root">
       
       {firebaseError === 'invalid-api-key' && (
         <div className="bg-amber-50 border-b border-amber-200 py-3 px-4 sm:px-6 animate-pulse shadow-sm" id="firebase-error-alert-banner">
@@ -1318,6 +1378,7 @@ export default function App() {
       {/* 1. Sticky Navigation Header */}
       {!isAdminView && (
         <Header
+          settings={settings}
           lang={lang}
           setLang={setLang}
           searchQuery={searchQuery}
@@ -1346,7 +1407,6 @@ export default function App() {
           isBackingUp={isBackingUp}
           activeTab={activeTab}
           setActiveTab={handleSetActiveTab}
-          wishlistCount={wishlist.length}
           onOpenProfile={() => {
             if (isLoggedIn) {
               navigate('/profile');
@@ -1405,6 +1465,12 @@ export default function App() {
                 setHasUserExitedAdmin(true);
                 setIsAdminView(false);
                 navigate('/');
+              }}
+              onSettingsChange={(newSettings) => {
+                setSettings(newSettings);
+              }}
+              onBannersChange={(updatedBanners) => {
+                setBanners(updatedBanners);
               }}
             />
           </div>
@@ -1466,8 +1532,6 @@ export default function App() {
                     onAddToCart={handleAddToCart}
                     onBuyNow={handleBuyNow}
                     onReviewSubmit={handleReviewSubmit}
-                    isFavorite={wishlist.includes(matchedProduct.id)}
-                    onToggleWishlist={handleToggleWishlist}
                     lang={lang}
                   />
                 );
@@ -1578,8 +1642,8 @@ export default function App() {
                     </h3>
                     <p className="text-xs text-slate-400 font-semibold leading-relaxed">
                       {lang === 'bn' 
-                        ? 'আপনি এখনও তাকওয়া এন্টারপ্রাইজ থেকে কোনো অর্ডার করেননি। আমাদের প্রিমিয়াম খাবার ও পাখি পালনের খাঁচা সংগ্রহ দেখতে আজই আমাদের স্টোরে ঘুরে আসুন।' 
-                        : 'Explore premium bird feeds, rabbit Timothy hay, and secure medical supplements to view active tracking streams.'}
+                        ? 'আপনি এখনও তাকওয়া এন্টারপ্রাইজ থেকে কোনো অর্ডার করেননি। আমাদের প্রিমিয়াম কবুতর ও পাখির খাবার, ঔষধ ও এক্সেসরিজ দেখতে আজই আমাদের স্টোরে ঘুরে আসুন।' 
+                        : 'Explore premium pigeon feed, bird seeds, medicines, and accessories to view active tracking streams.'}
                     </p>
                     <button
                       onClick={() => setActiveTab('store')}
@@ -1679,6 +1743,76 @@ export default function App() {
                             ))}
                           </div>
 
+                          {/* Deliver Tracking timeline inside order card */}
+                          <div className="pt-5 pb-2 border-t border-slate-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                              <p className="text-[10px] uppercase font-black tracking-wider text-slate-400 flex items-center gap-1.5">
+                                <span className="p-1 rounded-md bg-emerald-50 text-emerald-600">🚀</span>
+                                <span>{lang === 'bn' ? 'ডেলিভারি ট্র্যাকিং টাইমলাইন' : 'Delivery Tracking Timeline'}</span>
+                              </p>
+                              {((order as any).courier || (order as any).courierConsignmentId) && (
+                                <div className="text-[9px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 flex items-center gap-1 self-start sm:self-auto">
+                                  <span>📦 {lang === 'bn' ? 'কুরিয়ার:' : 'Courier:'} {(order as any).courier || 'Janani'}</span>
+                                  <span className="opacity-40">|</span>
+                                  <span>{lang === 'bn' ? 'চালান:' : 'CN:'} {(order as any).courierConsignmentId || '19518142'}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="grid grid-cols-5 gap-2 relative pt-2">
+                              {/* Connector line behind icons */}
+                              <div className="absolute top-[18px] left-[10%] right-[10%] h-0.5 bg-slate-100 z-0"></div>
+                              {/* Filled Connector line matching current status */}
+                              <div 
+                                className="absolute top-[18px] left-[10%] h-0.5 bg-emerald-600 z-0 transition-all duration-500"
+                                style={{
+                                  width: `${
+                                    order.orderStatus === 'Pending' ? '0%' :
+                                    order.orderStatus === 'Processing' ? '25%' :
+                                    order.orderStatus === 'Shipped' ? '50%' :
+                                    order.orderStatus === 'Out for Delivery' ? '75%' : '100%'
+                                  }`
+                                }}
+                              ></div>
+
+                              {[
+                                { key: 'Pending', labelBn: 'অর্ডার নথিভুক্ত', labelEn: 'Received', descBn: 'অর্ডারটি সিস্টেমে যোগ হয়েছে', descEn: 'System Received' },
+                                { key: 'Processing', labelBn: 'প্যাকেজিং চলছে', labelEn: 'Packaging', descBn: 'পণ্য প্যাকেজিং করা হচ্ছে', descEn: 'Item Packaging' },
+                                { key: 'Shipped', labelBn: 'কুরিয়ারে প্রেরিত', labelEn: 'Shipped', descBn: 'কুরিয়ারে বুকিং সম্পন্ন', descEn: 'Logistics Booked' },
+                                { key: 'Out for Delivery', labelBn: 'ডেলিভারির পথে', labelEn: 'Out / Transit', descBn: 'রাইডার পণ্য ডেলিভারি করছে', descEn: 'Out with Courier' },
+                                { key: 'Delivered', labelBn: 'ডেলিভারি সম্পন্ন', labelEn: 'Delivered', descBn: 'পণ্যটি আপনার হাতে পৌঁছেছে', descEn: 'Delivered Safely' }
+                              ].map((step, idx) => {
+                                // Determine status state
+                                const statusList = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
+                                const currentStatus = order.orderStatus === 'Completed' ? 'Delivered' : order.orderStatus;
+                                const currentIdx = statusList.indexOf(currentStatus);
+                                const stepIdx = statusList.indexOf(step.key);
+                                const isCompleted = stepIdx <= currentIdx;
+                                const isActive = stepIdx === currentIdx;
+
+                                return (
+                                  <div key={idx} className="flex flex-col items-center text-center relative z-10">
+                                    <div className={`w-8.5 h-8.5 rounded-full flex items-center justify-center border-2 transition-all duration-350 ${
+                                      isActive 
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md ring-4 ring-emerald-500/20'
+                                        : isCompleted 
+                                          ? 'bg-emerald-50 text-emerald-600 border-emerald-500'
+                                          : 'bg-white text-slate-300 border-slate-200'
+                                    }`}>
+                                      <span className="text-[10px] font-black">{idx + 1}</span>
+                                    </div>
+                                    <span className={`text-[9px] font-black mt-2 leading-tight ${isActive ? 'text-emerald-700' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
+                                      {lang === 'bn' ? step.labelBn : step.labelEn}
+                                    </span>
+                                    <span className="text-[8px] font-semibold text-slate-400 leading-none mt-1 hidden sm:block">
+                                      {lang === 'bn' ? step.descBn : step.descEn}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
                           {/* Logistics / Summary grid in block */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 text-xs text-slate-500 font-semibold bg-slate-50/50 -mx-4 -mb-4 p-4 sm:-mx-6 sm:-mb-6 sm:p-6">
                             <div className="space-y-1 sm:border-r border-slate-150 sm:pr-4">
@@ -1724,270 +1858,345 @@ export default function App() {
               </div>
             )}
           </div>
-        ) : activeTab === 'wishlist' ? (
-          /* FAVOURITES / WISHLIST MOUNT */
-          <div className="py-6 animate-fade-in space-y-6">
-            <div className="flex items-center space-x-2 border-b border-slate-200 pb-3">
-              <Heart className="w-6 h-6 text-red-500 fill-current animate-pulse" />
-              <h2 className="text-xl font-bold text-slate-800">
-                {lang === 'bn' ? 'আপনার পছন্দের পণ্যের তালিকা' : 'Your Favorite Wishlist'}
-              </h2>
-            </div>
-
-            {products.filter(p => wishlist.includes(p.id)).length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-6 space-y-4 max-w-md mx-auto shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto">
-                  <Heart className="w-8 h-8 text-red-400" />
-                </div>
-                <h3 className="font-bold text-slate-700 text-sm">
-                  {lang === 'bn' ? 'তালিকায় কোনো পছন্দের পণ্য পাওয়া যায়নি' : 'Your Wishlist is Empty'}
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                  {lang === 'bn' ? 'আমাদের প্রিমিয়াম পাখি, বিড়াল ও মাছের খাবার ব্রাউজ করুন এবং আপনার পছন্দের পণ্যগুলো এখানে সংরক্ষণ করুন।' : 'Add high-grade seeds, premium dry cat foods, or supplements to save them here for quick views.'}
-                </p>
-                <button
-                  onClick={() => setActiveTab('store')}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-colors"
-                >
-                  {lang === 'bn' ? 'স্টোরে ফিরে যান' : 'Shop Feed Catalog'}
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
-                {products.filter(p => wishlist.includes(p.id)).map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    lang={lang}
-                    onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
-                    onAddToCart={handleAddToCart}
-                    isFavorite={true}
-                    onToggleWishlist={handleToggleWishlist}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
         ) : (
           /* E-COMMERCE MAIN MARKETPLACE SHELF */
-          <div className="space-y-8 animate-fade-in" id="storefront-stage">
+          <div className="space-y-8 sm:space-y-10 animate-fade-in" id="storefront-stage">
             
-            {/* 1. Slider Hero Banner (Premium, Less text, highly visual) */}
+            {/* 2. Hero / Promotional Banner Section (Only on default homepage view) */}
             {activeCategory === 'all' && !searchQuery && (
-              <div className="relative overflow-hidden rounded-3xl shadow-lg bg-slate-900 group h-[220px] sm:h-[300px] md:h-[400px]">
-                {/* Slide Container */}
-                <div className="w-full h-full relative">
-                  {HERO_SLIDES.map((slide, idx) => (
-                    <div
-                      key={slide.id}
-                      className={`absolute inset-0 transition-all duration-700 ease-in-out flex flex-col md:flex-row items-center justify-between p-6 md:p-12 text-white bg-gradient-to-r ${slide.accentBg} ${
-                        idx === currentSlide ? 'opacity-100 translate-x-0 scale-100 z-10' : 'opacity-0 translate-x-12 scale-95 pointer-events-none z-0'
-                      }`}
-                    >
-                      {/* Text Content */}
-                      <div className="max-w-md space-y-2 md:space-y-4 shrink-0 text-left">
-                        <span className="inline-flex items-center gap-1 bg-emerald-600/30 text-emerald-300 font-extrabold text-[9px] tracking-widest uppercase px-3 py-1 rounded-full border border-emerald-500/20">
-                          <Sparkles className="w-3 h-3 animate-spin" />
-                          {lang === 'bn' ? 'তাকওয়া স্পেশাল' : 'Taqwa Premium Selection'}
-                        </span>
-                        <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
-                          {lang === 'bn' ? slide.titleBn : slide.titleEn}
-                        </h2>
-                        <p className="text-[10px] sm:text-xs md:text-sm text-slate-200 max-w-sm font-semibold leading-relaxed line-clamp-2 md:line-clamp-none">
-                          {lang === 'bn' ? slide.descBn : slide.descEn}
-                        </p>
-                        <div className="pt-2">
-                          <button
-                            onClick={() => {
-                              const feed = document.getElementById('main-feed-title');
-                              if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }}
-                            className="px-4 py-2 sm:px-6 sm:py-3 bg-white hover:bg-emerald-50 text-emerald-950 font-black text-xs rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-                          >
-                            <span>{lang === 'bn' ? slide.ctaBn : slide.ctaEn}</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
+              <div className="space-y-4">
+                <HeroBanner
+                  banners={banners}
+                  lang={lang}
+                  currentSlide={currentSlide}
+                  setCurrentSlide={setCurrentSlide}
+                  onCtaClick={(category) => {
+                    if (category && category !== 'all') {
+                      setActiveCategory(category);
+                    }
+                    const feed = document.getElementById('main-product-feed');
+                    if (feed) {
+                      feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                />
 
-                      {/* Large Product Visual (Right Side) */}
-                      <div className="hidden md:block w-1/2 h-full relative overflow-hidden rounded-2xl border border-white/10 shadow-lg">
-                        <img
-                          src={slide.image}
-                          alt={lang === 'bn' ? slide.titleBn : slide.titleEn}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                {/* Trust & Quality Assurance Strip (Clean White + Blue Accents) */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+                  {[
+                    {
+                      icon: '🌾',
+                      titleBn: '১০০% পরিষ্কার দানা',
+                      titleEn: '100% Dust-free Grains',
+                      descBn: 'ধুলোবালিমুক্ত বাছাইকৃত বীজ',
+                      descEn: 'Machine cleaned & graded',
+                    },
+                    {
+                      icon: '🚚',
+                      titleBn: 'দ্রুত ডেলিভারি',
+                      titleEn: 'Fast Courier Delivery',
+                      descBn: 'সারা দেশে নিরাপদ ডেলিভারি',
+                      descEn: 'Across all 64 districts',
+                    },
+                    {
+                      icon: '🏷️',
+                      titleBn: 'সেরা বাজার মূল্য',
+                      titleEn: 'Wholesale & Retail',
+                      descBn: 'খামারিদের জন্য বিশেষ ছাড়',
+                      descEn: 'Direct importer pricing',
+                    },
+                    {
+                      icon: '🛡️',
+                      titleBn: 'আসল পুষ্টি ও গুণমান',
+                      titleEn: 'Tested Nutrition',
+                      descBn: 'উন্নত ব্রিডিং ও গ্রোথ ফর্মুলা',
+                      descEn: 'Optimal health formula',
+                    },
+                  ].map((feature, i) => (
+                    <div
+                      key={i}
+                      className="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200/90 flex items-center gap-3 shadow-2xs hover:border-blue-300 transition-colors"
+                    >
+                      <span className="text-xl sm:text-2xl shrink-0">{feature.icon}</span>
+                      <div className="text-left overflow-hidden">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-800 leading-tight truncate">
+                          {lang === 'bn' ? feature.titleBn : feature.titleEn}
+                        </h4>
+                        <p className="text-[10px] sm:text-[11px] text-slate-500 font-normal leading-tight mt-0.5 truncate">
+                          {lang === 'bn' ? feature.descBn : feature.descEn}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {/* Next / Prev Navigation Chevrons */}
-                <button
-                  onClick={() => setCurrentSlide(prev => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer z-20 hover:scale-105"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer z-20 hover:scale-105"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-
-                {/* Dot Indicators */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
-                  {HERO_SLIDES.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentSlide(idx)}
-                      className={`h-2.5 rounded-full transition-all cursor-pointer ${
-                        idx === currentSlide ? 'w-6 bg-emerald-500' : 'w-2.5 bg-white/40 hover:bg-white/60'
-                      }`}
-                    />
-                  ))}
-                </div>
               </div>
             )}
 
-
-            {/* 3. Flash Sale (Only if active category is 'all' and search query is empty) */}
-            {activeCategory === 'all' && !searchQuery && products.filter(p => p.originalPrice > p.price).length > 0 && (
-              <div className="bg-rose-50/50 rounded-2xl border border-rose-100 p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-rose-100/50 pb-3">
+            {/* 3. Featured Animal Feed Products Section */}
+            {activeCategory === 'all' && !searchQuery && featuredAnimalFeed.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-2.5 h-6 bg-rose-500 rounded-full"></div>
-                    <h3 className="font-extrabold text-slate-800 text-sm tracking-wider uppercase">
-                      {lang === 'bn' ? 'ফ্ল্যাশ সেল অফার' : 'Flash Sale Special'}
+                    <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
+                    <h3 className="font-extrabold text-slate-800 text-sm sm:text-base tracking-tight">
+                      {lang === 'bn' ? 'ফিচার্ড কবুতর ও প্রাণীর খাবার' : 'Featured Animal & Pigeon Feed'}
                     </h3>
-                    <span className="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md animate-pulse uppercase tracking-widest">
-                      {lang === 'bn' ? 'সীমিত সময়' : 'Live'}
-                    </span>
                   </div>
-
-                  <div className="flex items-center gap-1 text-slate-850 text-xs font-extrabold">
-                    <span className="text-slate-450 font-semibold mr-1">{lang === 'bn' ? 'শেষ হতে বাকি:' : 'Ends In:'}</span>
-                    <span className="bg-slate-900 text-white px-2 py-1 rounded-md font-mono">{String(timeLeft.hours).padStart(2, '0')}</span>
-                    <span className="text-slate-900">:</span>
-                    <span className="bg-slate-900 text-white px-2 py-1 rounded-md font-mono">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                    <span className="text-slate-900">:</span>
-                    <span className="bg-slate-900 text-white px-2 py-1 rounded-md font-mono">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                  </div>
+                  <button
+                    onClick={() => {
+                      setActiveCategory('pigeons');
+                      const feed = document.getElementById('main-product-feed');
+                      if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <span>{lang === 'bn' ? 'সবগুলো দেখুন' : 'View All'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {products.filter(p => p.originalPrice > p.price).slice(0, 4).map((p) => (
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-stretch">
+                  {featuredAnimalFeed.slice(0, 4).map((p) => (
                     <ProductCard
                       key={p.id}
                       product={p}
                       lang={lang}
                       onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
                       onAddToCart={handleAddToCart}
-                      isFavorite={wishlist.includes(p.id)}
-                      onToggleWishlist={handleToggleWishlist}
+                      onBuyNow={handleBuyNow}
                     />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* 4. Special Curated Sections (Featured, Best Sellers, New Arrivals) */}
-            {activeCategory === 'all' && !searchQuery && (
-              <div className="space-y-8">
-                {/* Featured Section */}
-                {products.filter(p => p.featured).length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-6 bg-emerald-600 rounded-full"></div>
-                      <h3 className="font-extrabold text-slate-800 text-sm tracking-wider uppercase">
-                        {lang === 'bn' ? 'ফিচার্ড পণ্যসমূহ' : 'Featured Products'}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {products.filter(p => p.featured).slice(0, 4).map((p) => (
-                        <ProductCard
-                          key={p.id}
-                          product={p}
-                          lang={lang}
-                          onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
-                          onAddToCart={handleAddToCart}
-                          isFavorite={wishlist.includes(p.id)}
-                          onToggleWishlist={handleToggleWishlist}
-                        />
-                      ))}
-                    </div>
+            {/* 4. Featured Bird Feed Products Section */}
+            {activeCategory === 'all' && !searchQuery && featuredBirdFeed.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
+                    <h3 className="font-extrabold text-slate-800 text-sm sm:text-base tracking-tight">
+                      {lang === 'bn' ? 'ফিচার্ড পাখির খাবার ও সিড মিক্স' : 'Featured Bird Feed & Seeds'}
+                    </h3>
                   </div>
-                )}
+                  <button
+                    onClick={() => {
+                      setActiveCategory('birds');
+                      const feed = document.getElementById('main-product-feed');
+                      if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <span>{lang === 'bn' ? 'সবগুলো দেখুন' : 'View All'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
 
-                {/* Best Sellers Section */}
-                {products.filter(p => p.bestSeller).length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-6 bg-amber-500 rounded-full"></div>
-                      <h3 className="font-extrabold text-slate-800 text-sm tracking-wider uppercase">
-                        {lang === 'bn' ? 'বেস্ট সেলার পণ্য' : 'Best Sellers'}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {products.filter(p => p.bestSeller).slice(0, 4).map((p) => (
-                        <ProductCard
-                          key={p.id}
-                          product={p}
-                          lang={lang}
-                          onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
-                          onAddToCart={handleAddToCart}
-                          isFavorite={wishlist.includes(p.id)}
-                          onToggleWishlist={handleToggleWishlist}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* New Arrivals Section */}
-                {products.filter(p => p.recommended).length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-6 bg-teal-600 rounded-full"></div>
-                      <h3 className="font-extrabold text-slate-800 text-sm tracking-wider uppercase">
-                        {lang === 'bn' ? 'নতুন পণ্যসমূহ' : 'New Arrivals'}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {products.filter(p => p.recommended).slice(0, 4).map((p) => (
-                        <ProductCard
-                          key={p.id}
-                          product={p}
-                          lang={lang}
-                          onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
-                          onAddToCart={handleAddToCart}
-                          isFavorite={wishlist.includes(p.id)}
-                          onToggleWishlist={handleToggleWishlist}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-stretch">
+                  {featuredBirdFeed.slice(0, 4).map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      lang={lang}
+                      onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
+                      onAddToCart={handleAddToCart}
+                      onBuyNow={handleBuyNow}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* 5. Main Product Feed and Infinite Scroll */}
-            <div className="space-y-5 scroll-mt-24 pt-4" id="main-product-feed">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3" id="main-feed-title">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-6 bg-slate-800 rounded-full"></div>
-                  <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
-                    {activeCategory !== 'all' || searchQuery
-                      ? (lang === 'bn' ? 'ফিল্টারকৃত পণ্যসমূহ' : 'Filtered Products Feed')
-                      : (lang === 'bn' ? 'সব পণ্য ফিড' : 'Main Product Feed')}
-                  </h3>
+            {/* 5. Popular Categories Section */}
+            {/* 5. Popular Categories Section */}
+            {activeCategory === 'all' && !searchQuery && (
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-4.5 bg-blue-600 rounded-full"></div>
+                    <h3 className="font-extrabold text-slate-800 text-sm sm:text-base tracking-tight">
+                      {lang === 'bn' ? 'জনপ্রিয় ক্যাটাগরি সমূহ' : 'Popular Categories'}
+                    </h3>
+                  </div>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {lang === 'bn' ? 'ফিল্টার করতে ক্লিক করুন' : 'Tap to filter products'}
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-slate-400 font-mono">
-                  {processedProducts.length} {lang === 'bn' ? 'টি পণ্য পাওয়া গেছে' : 'products found'}
-                </span>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5">
+                  {filterTabs.map((tab) => {
+                    const count = products.filter(p => tab.key === 'all' || p.category === tab.key).length;
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => {
+                          setActiveCategory(tab.key);
+                          const feed = document.getElementById('main-product-feed');
+                          if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className="bg-white p-3.5 rounded-xl border border-slate-200/90 hover:border-blue-400 hover:shadow-2xs transition-all text-left flex flex-col justify-between group cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className="text-xl p-1.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                            {tab.icon}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {count} {lang === 'bn' ? 'টি' : 'items'}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-xs sm:text-sm group-hover:text-blue-600 transition-colors leading-tight line-clamp-1">
+                            {lang === 'bn' ? tab.bn : tab.en}
+                          </h4>
+                          <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-0.5 mt-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                            {lang === 'bn' ? 'পণ্য দেখুন' : 'Explore'} →
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 6. Promotional Brand/Banner Section */}
+            {activeCategory === 'all' && !searchQuery && (
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-blue-900 text-white p-6 sm:p-8 md:p-10 shadow-md">
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="max-w-xl space-y-3 text-left">
+                    <span className="inline-flex items-center gap-1 bg-blue-500/30 text-blue-200 font-bold text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border border-blue-400/20">
+                      {lang === 'bn' ? 'তাকওয়া স্পেশাল কালেকশন' : 'Taqwa Purity Promise'}
+                    </span>
+                    <h3 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+                      {lang === 'bn'
+                        ? '১০০% ধুলোবালিমুক্ত পরিষ্কার দানা ও প্রিমিয়াম সিড মিক্স'
+                        : '100% Dust-Free Organic Seed Mixes & High Nutrition Feed'}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      {lang === 'bn'
+                        ? 'কবুতর ও পাখির স্বাস্থ্যসম্মত ব্রিডিং, চঞ্চলতা এবং পালকের উজ্জ্বলতার জন্য আমাদের রয়েছে নিজস্ব আমদানিকৃত সেরা খাদ্য দানা ও ভেটেরিনারি কেয়ার সামগ্রী।'
+                        : 'Meticulously cleaned, laboratory-graded grains and nutrient-dense seed mixes supporting vibrant plumage, high fertility, and active life.'}
+                    </p>
+                    <div className="pt-2 flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          const feed = document.getElementById('main-product-feed');
+                          if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                      >
+                        <span>{lang === 'bn' ? 'সকল খাদ্য দেখুন' : 'Explore All Feeds'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveCategory('medicine');
+                          const feed = document.getElementById('main-product-feed');
+                          if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+                      >
+                        {lang === 'bn' ? 'ঔষধ ও কেয়ার' : 'Medicine & Care'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visual product preview cards */}
+                  <div className="grid grid-cols-2 gap-3 w-full md:w-auto shrink-0">
+                    {products.slice(0, 2).map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => navigate(`/products/${item.slug}`)}
+                        className="bg-white/10 backdrop-blur-md p-2.5 rounded-xl border border-white/15 w-full sm:w-36 text-left cursor-pointer hover:bg-white/15 transition-all"
+                      >
+                        <img
+                          src={item.image || DEFAULT_PRODUCT_IMAGE}
+                          alt={item.name}
+                          className="w-full h-20 sm:h-24 object-cover rounded-lg mb-2"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                          }}
+                        />
+                        <p className="text-[11px] font-bold text-white truncate">{lang === 'bn' && item.banglaName ? item.banglaName : item.name}</p>
+                        <p className="text-xs font-black text-blue-300 mt-0.5">৳{item.price}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 7. Best-Selling Products Section */}
+            {activeCategory === 'all' && !searchQuery && bestSellingList.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
+                    <h3 className="font-extrabold text-slate-800 text-sm sm:text-base tracking-tight">
+                      {lang === 'bn' ? 'বেস্ট সেলিং পণ্যসমূহ' : 'Best-Selling Products'}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const feed = document.getElementById('main-product-feed');
+                      if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <span>{lang === 'bn' ? 'সব পণ্য ব্রাউজ করুন' : 'Browse All'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-stretch">
+                  {bestSellingList.slice(0, 4).map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      lang={lang}
+                      onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
+                      onAddToCart={handleAddToCart}
+                      onBuyNow={handleBuyNow}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Complete Catalog Feed with Filter Sidebar and Infinite Scroll */}
+            <div className="space-y-5 scroll-mt-24 pt-4 border-t border-slate-100" id="main-product-feed">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">
+                    {searchQuery 
+                      ? (lang === 'bn' ? `অনুসন্ধান ফলাফল: "${searchQuery}"` : `Search Results for "${searchQuery}"`)
+                      : (activeCategory === 'all'
+                          ? (lang === 'bn' ? 'সকল খাদ্য ও সামগ্রী ক্যাটালগ' : 'All Feeds & Products Catalog')
+                          : (lang === 'bn' 
+                              ? `ক্যাটাগরি: ${filterTabs.find(t => t.key === activeCategory)?.bn || activeCategory}` 
+                              : `Category: ${filterTabs.find(t => t.key === activeCategory)?.en || activeCategory}`))}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                    {lang === 'bn' 
+                      ? `মোট ${processedProducts.length} টি পণ্য পাওয়া গেছে` 
+                      : `Showing ${processedProducts.length} items`}
+                  </p>
+                </div>
+
+                {(activeCategory !== 'all' || searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setActiveCategory('all');
+                      setSearchQuery('');
+                    }}
+                    className="self-start sm:self-auto text-xs font-bold text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span>{lang === 'bn' ? 'সব পণ্যে ফিরে যান' : 'Reset to All Products'}</span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Main Grid: Left Sidebar on Desktop (col-span-1), Right Catalog Content (col-span-3) */}
@@ -2013,21 +2222,24 @@ export default function App() {
 
                     {/* Category List */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-black text-slate-450 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2.5">
                         {lang === 'bn' ? 'ক্যাটাগরি সমূহ' : 'Pet Categories'}
                       </p>
                       {filterTabs.map((tab) => (
                         <button
                           key={tab.key}
                           onClick={() => setActiveCategory(tab.key)}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3.5 py-3 rounded-xl text-base font-black transition-all flex items-center justify-between cursor-pointer ${
                             activeCategory === tab.key
-                              ? 'bg-emerald-50 text-emerald-800'
-                              : 'text-slate-600 hover:bg-slate-50'
+                              ? 'bg-blue-50 text-blue-800 ring-1 ring-blue-200'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
-                          <span>{lang === 'bn' ? tab.bn : tab.en}</span>
-                          {activeCategory === tab.key && <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></span>}
+                          <span className="flex items-center gap-2.5">
+                            <span className="text-lg">{tab.icon}</span>
+                            <span>{lang === 'bn' ? tab.bn : tab.en}</span>
+                          </span>
+                          {activeCategory === tab.key && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
                         </button>
                       ))}
                     </div>
@@ -2046,11 +2258,11 @@ export default function App() {
                         step="50"
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(Number(e.target.value))}
-                        className="w-full accent-emerald-600 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
+                        className="w-full accent-blue-600 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
                       />
                       <div className="flex items-center justify-between text-xs font-extrabold text-slate-700">
                         <span>৳৫০</span>
-                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">৳{maxPrice}</span>
+                        <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">৳{maxPrice}</span>
                       </div>
                     </div>
                     
@@ -2067,7 +2279,7 @@ export default function App() {
                           onClick={() => setMaxPrice(preset.value)}
                           className={`px-2 py-1 text-[10px] font-bold rounded-lg border text-center transition-all cursor-pointer ${
                             maxPrice === preset.value
-                              ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                              ? 'border-blue-500 bg-blue-50 text-blue-800'
                               : 'border-slate-100 text-slate-500 hover:bg-slate-50'
                           }`}
                         >
@@ -2113,7 +2325,7 @@ export default function App() {
                     <button
                       onClick={() => setInStockOnly(!inStockOnly)}
                       className={`w-9 h-5 rounded-full p-0.5 transition-all flex items-center cursor-pointer ${
-                        inStockOnly ? 'bg-emerald-600 justify-end' : 'bg-slate-200 justify-start'
+                        inStockOnly ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
                       }`}
                     >
                       <div className="w-4 h-4 rounded-full bg-white shadow-xs"></div>
@@ -2123,14 +2335,14 @@ export default function App() {
 
                 {/* Right Catalog Feed */}
                 <div className="col-span-1 lg:col-span-3">
-                  
+
                   {/* Tablet/Mobile sorting helper bar */}
                   <div className="flex lg:hidden items-center justify-between p-3 bg-white rounded-xl border border-slate-100 mb-4 text-xs font-bold gap-3">
                     <span className="text-slate-500">{lang === 'bn' ? 'সাজান:' : 'Sort:'}</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-lg py-1 px-2.5 focus:outline-none focus:border-emerald-500 text-slate-700 font-extrabold cursor-pointer"
+                      className="bg-slate-50 border border-slate-200 rounded-lg py-1 px-2.5 focus:outline-none focus:border-blue-500 text-slate-700 font-extrabold cursor-pointer"
                     >
                       <option value="default">{lang === 'bn' ? 'ডিফল্ট' : 'Default'}</option>
                       <option value="price-low">{lang === 'bn' ? 'মূল্য: কম থেকে বেশি' : 'Price: Low to High'}</option>
@@ -2143,14 +2355,20 @@ export default function App() {
                     <button
                       onClick={() => setInStockOnly(!inStockOnly)}
                       className={`px-2.5 py-1 rounded-lg border text-[11px] font-extrabold transition-all cursor-pointer ${
-                        inStockOnly ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'border-slate-200 text-slate-500'
+                        inStockOnly ? 'bg-blue-50 border-blue-300 text-blue-800' : 'border-slate-200 text-slate-500'
                       }`}
                     >
                       {lang === 'bn' ? 'স্টক আছে' : 'In Stock'}
                     </button>
                   </div>
 
-                  {processedProducts.length === 0 ? (
+                  {isLoadingProducts ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <ProductSkeleton key={i} />
+                      ))}
+                    </div>
+                  ) : processedProducts.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-3xl border border-slate-150 p-6 space-y-4">
                       <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-slate-400 text-2xl">
                         🔍
@@ -2171,7 +2389,7 @@ export default function App() {
                           setActiveCategory('all');
                           setSearchQuery('');
                         }}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-colors"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-colors"
                       >
                         {lang === 'bn' ? 'সব ফিল্টার সাফ করুন' : 'Clear All Filters'}
                       </button>
@@ -2179,7 +2397,7 @@ export default function App() {
                   ) : (
                     <div className="space-y-8">
                       {/* Grid displaying visibleProducts only */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-stretch">
                         {processedProducts.slice(0, visibleProductsCount).map((p) => (
                           <ProductCard
                             key={p.id}
@@ -2187,14 +2405,14 @@ export default function App() {
                             lang={lang}
                             onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
                             onAddToCart={handleAddToCart}
-                            isFavorite={wishlist.includes(p.id)}
-                            onToggleWishlist={handleToggleWishlist}
+                            onBuyNow={handleBuyNow}
                           />
                         ))}
 
                         {/* Infinite Scroll Skeleton Loader Placeholder Cards */}
                         {isLoadingMore && (
                           <>
+                            <ProductSkeleton />
                             <ProductSkeleton />
                             <ProductSkeleton />
                             <ProductSkeleton />
@@ -2206,7 +2424,7 @@ export default function App() {
                       {hasMore && !isLoadingMore && (
                         <div ref={observerTarget} className="h-10 flex items-center justify-center">
                           <div className="flex items-center gap-2 text-xs text-slate-400 font-bold animate-pulse">
-                            <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
+                            <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
                             <span>{lang === 'bn' ? 'অতিরিক্ত পণ্য লোড হচ্ছে...' : 'Loading additional products...'}</span>
                           </div>
                         </div>
@@ -2224,35 +2442,23 @@ export default function App() {
               </div>
             </div>
 
-            {/* High trust guarantee assurances */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
-              {[
-                { title: lang === 'bn' ? 'শতভাগ গুণমান আসল মিক্স দানা' : 'Natural Import feeds', desc: lang === 'bn' ? 'পাখি ও কবুতরের খাবারের গুণমান শতভাগ রাসায়নিক-মুক্ত রাখার নিশ্চয়তা দিচ্ছি।' : 'Chemical free formulas verified under rigorous health specs.' },
-                { title: dict[lang].quickTitle, desc: dict[lang].quickDesc },
-                { title: lang === 'bn' ? 'নিরাপদ গেটওয়ে ও সহজ পেমেন্ট' : 'KMS Protection encryption', desc: lang === 'bn' ? 'মোবাইল ব্যাংকিং (বিকাশ, নগদ, রকেট) এবং এন্ড-টু-এ্যান্ড ডাটা এনক্রিপশন সাপোর্ট।' : 'Secures transactions using prompt OTP and bKash verification.' }
-              ].map((card, idx) => (
-                <div key={idx} className="bg-white p-5 rounded-xl border border-slate-100 shadow-xs hover:shadow-md transition-all">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    {card.title}
-                  </h4>
-                  <p className="text-xs text-slate-400 font-semibold leading-relaxed">{card.desc}</p>
+            {/* Customer Testimonials Section */}
+            <div className="bg-white rounded-2xl p-5 sm:p-7 border border-slate-200/90 shadow-2xs space-y-5">
+              <div className="text-center space-y-1.5">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-[10px] bg-blue-50 text-blue-700 font-bold uppercase px-2.5 py-0.5 rounded-full border border-blue-100 tracking-wider">
+                    {lang === 'bn' ? 'গ্রাহক প্রতিক্রিয়া' : 'CUSTOMER FEEDBACK'}
+                  </span>
+                  <span className="text-[10px] bg-slate-100 text-slate-500 font-medium px-2 py-0.5 rounded-full border border-slate-200">
+                    {lang === 'bn' ? 'নমুনা রিভিউ (ডেমো)' : 'Sample Feedback (Demo)'}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {/* Customer Testimonials Slider Section */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-150 shadow-xs space-y-6 mt-8">
-              <div className="text-center space-y-1">
-                <span className="text-[10px] bg-emerald-50 text-emerald-800 font-extrabold uppercase px-2.5 py-1 rounded-md tracking-wider">
-                  {lang === 'bn' ? 'সন্তুষ্ট গ্রাহকের মন্তব্য' : 'CUSTOMER LOVE'}
-                </span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-slate-800">
-                  {lang === 'bn' ? 'আমাদের প্রতি কাস্টমারদের মূল্যবান মতামত' : 'What Our Happy Clients Say About Us'}
+                <h3 className="text-base sm:text-lg md:text-xl font-extrabold text-slate-800">
+                  {lang === 'bn' ? 'আমাদের প্রতি খামারি ও পোষা প্রাণী পালকদের মতামত' : 'What Our Clients Say About Us'}
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
                 {[
                   {
                     name: lang === 'bn' ? 'মোঃ তানভীর হাসান' : 'Tanvir Hasan',
@@ -2276,27 +2482,30 @@ export default function App() {
                     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120'
                   }
                 ].map((testimonial, idx) => (
-                  <div key={idx} className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 flex flex-col justify-between hover:shadow-md transition-all group">
-                    <div className="space-y-3 text-left">
+                  <div key={idx} className="bg-slate-50/70 p-4 sm:p-5 rounded-xl border border-slate-200/80 flex flex-col justify-between hover:border-blue-300 transition-colors">
+                    <div className="space-y-2.5 text-left">
                       <div className="flex text-amber-400">
                         {Array.from({ length: testimonial.rating }).map((_, i) => (
                           <Star key={i} className="w-3.5 h-3.5 fill-current" />
                         ))}
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed italic font-medium">
+                      <p className="text-xs text-slate-600 leading-relaxed font-normal">
                         "{testimonial.text}"
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 pt-4 mt-4 border-t border-slate-100/60 text-left">
+                    <div className="flex items-center gap-3 pt-3.5 mt-3.5 border-t border-slate-200/60 text-left">
                       <img
                         src={testimonial.avatar}
                         alt={testimonial.name}
-                        className="w-9 h-9 rounded-full object-cover border border-slate-200"
+                        className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
                         referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                        }}
                       />
-                      <div>
-                        <h5 className="text-xs font-black text-slate-800">{testimonial.name}</h5>
-                        <p className="text-[10px] text-slate-400 font-semibold">{testimonial.role}</p>
+                      <div className="overflow-hidden">
+                        <h5 className="text-xs font-bold text-slate-800 truncate">{testimonial.name}</h5>
+                        <p className="text-[10px] text-slate-500 font-medium truncate">{testimonial.role}</p>
                       </div>
                     </div>
                   </div>
@@ -2478,7 +2687,7 @@ export default function App() {
                     </div>
                   )}
 
-                  {authEmail.trim().toLowerCase() === 'taqwaenterpriseoffice@gmail.com' && (
+                  {authEmail.trim().toLowerCase() === (localStorage.getItem('taqwa_super_admin_email') || 'taqwaenterpriseoffice@gmail.com').trim().toLowerCase() && (
                     <p className="text-[10px] text-emerald-700 font-semibold leading-relaxed">
                       📢 <strong>Admin Role Trigger:</strong> Email matched bootstrapped configurations; log-in to instantly authorize SaaS features.
                     </p>
@@ -2726,13 +2935,11 @@ export default function App() {
             {/* List display of all categories */}
             <div className="flex flex-col gap-3">
               {[
-                { key: 'all', en: 'All Products', bn: 'সব পণ্য', descEn: 'View all pet products', descBn: 'আমাদের সকল পণ্য একসাথে দেখুন', color: 'slate', icon: Sparkles },
-                { key: 'cats', en: 'Cats Diet', bn: 'বিড়ালের খাবার', descEn: 'Premium wet & dry feed', descBn: 'বিড়ালের প্রোটিনযুক্ত পুষ্টিকর খাবার', color: 'rose', icon: Cat },
-                { key: 'birds', en: 'Birds Seed', bn: 'পাখির দানা', descEn: 'Natural mixed seeds', descBn: 'পাখির প্রিমিয়াম মিক্সড দানা বীজ', color: 'blue', icon: Bird },
-                { key: 'fish', en: 'Fish Pellets', bn: 'মাছের খাবার', descEn: 'Micro growth pellets', descBn: 'রঙিন মাছের ভাসমান ও ডুবন্ত খাবার', color: 'cyan', icon: Fish },
-                { key: 'rabbits', en: 'Rabbit Hay', bn: 'খরগোশের ঘাস', descEn: 'Fresh timothy grass', descBn: 'খরগোশের ঘাস, খাদ্য ও লিটার', color: 'amber', icon: Rabbit },
-                { key: 'accessories', en: 'Accessories', bn: 'সাজসজ্জা ও খাঁচা', descEn: 'Feeders, cages & toys', descBn: 'পাখির খাঁচা, ফিডার ও আকর্ষণীয় খেলনা', color: 'purple', icon: Activity },
-                { key: 'supplements', en: 'Supplements', bn: 'ভিটামিন ও ঔষধ', descEn: 'Vet certified remedies', descBn: 'পাখি ও বিড়ালের রোগ প্রতিষেধক ও ভিটামিন', color: 'emerald', icon: ShieldCheck }
+                { key: 'all', en: 'All Products', bn: 'সব পণ্য', descEn: 'View all products', descBn: 'আমাদের সকল পণ্য একসাথে দেখুন', color: 'slate', icon: Sparkles },
+                { key: 'pigeons', en: 'Pigeon Feed', bn: 'কবুতরের খাবার', descEn: 'Cleaned mixed grains & racing mix', descBn: 'কবুতরের বাছাইকৃত মিক্সড দানা ও গ্রিট', color: 'blue', icon: Bird },
+                { key: 'birds', en: 'Bird Feed', bn: 'পাখির খাবার', descEn: 'Natural mixed seeds & baby formula', descBn: 'বাজরিগার, ককাটেল ও পাখির সিড মিক্স', color: 'emerald', icon: Feather },
+                { key: 'medicine', en: 'Medicine', bn: 'ঔষধ', descEn: 'Essential vitamins, drops & tonics', descBn: 'পাখি ও কবুতরের রোগ প্রতিরোধক ও ভিটামিন', color: 'rose', icon: Pill },
+                { key: 'accessories', en: 'Accessories', bn: 'এক্সেসরিজ', descEn: 'Feeders, cages & nesting pots', descBn: 'খাঁচা, অটো ফিডার ও ব্রিডিং এক্সেসরিজ', color: 'purple', icon: Activity }
               ].map((cat) => {
                 const IconComponent = cat.icon;
                 const isActive = activeCategory === cat.key;
@@ -2779,10 +2986,10 @@ export default function App() {
                         <IconComponent className="w-5.5 h-5.5" />
                       </div>
                       <div>
-                        <p className={`text-xs sm:text-sm font-extrabold ${isActive ? 'text-emerald-700' : 'text-slate-800'}`}>
+                        <p className={`text-sm sm:text-base font-extrabold ${isActive ? 'text-emerald-700' : 'text-slate-800'}`}>
                           {lang === 'bn' ? cat.bn : cat.en}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">
+                        <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">
                           {lang === 'bn' ? cat.descBn : cat.descEn}
                         </p>
                       </div>
@@ -2841,57 +3048,58 @@ export default function App() {
       {showBackToTop && !isAdminView && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-40 right-4 md:bottom-28 md:right-8 z-50 p-3 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border border-emerald-500 flex items-center justify-center cursor-pointer"
+          className="fixed bottom-34 right-4 md:bottom-20 md:right-6 z-40 w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center cursor-pointer border border-blue-500"
           title={lang === 'bn' ? 'উপরে যান' : 'Back to Top'}
           id="back-to-top-btn"
+          aria-label={lang === 'bn' ? 'উপরে যান' : 'Back to Top'}
         >
-          <ArrowUp className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+          <ArrowUp className="w-4 h-4" />
         </button>
       )}
 
       {/* 7. Redesigned Minimal Footer */}
       {!isAdminView && (
-        <footer className="mt-20 bg-slate-900 text-slate-400 py-16 px-6 border-t border-slate-800 text-xs font-semibold pb-24 md:pb-16" id="app-footer">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12 text-left">
+        <footer className="mt-12 sm:mt-16 bg-slate-900 text-slate-400 py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-800 text-xs pb-24 md:pb-12" id="app-footer">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-10 text-left">
             {/* Column 1: Brand & Bio */}
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white text-base">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-base">
                   ত
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-white tracking-wider uppercase leading-none">
                     {lang === 'bn' ? 'তাকওয়া এন্টারপ্রাইজ' : 'Taqwa Enterprise'}
                   </h4>
-                  <p className="text-[9px] text-emerald-450 uppercase tracking-widest font-bold mt-1">
-                    {lang === 'bn' ? 'বিশ্বস্ত পোষা খাদ্য আমদানিকারক' : 'PREMIUM PET FOOD IMPORTS'}
+                  <p className="text-[9px] text-blue-400 uppercase tracking-widest font-bold mt-1">
+                    {lang === 'bn' ? 'বিশ্বস্ত পোষা খাদ্য ও বীজ আমদানিকারক' : 'PREMIUM FEEDS & SEED IMPORTS'}
                   </p>
                 </div>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed font-normal">
                 {lang === 'bn' 
-                  ? 'তাকওয়া এন্টারপ্রাইজ সততা ও বিশ্বাসের সাথে পোষা প্রাণীর শতভাগ খাঁটি ও পুষ্টিকর দানা বীজ এবং আন্তর্জাতিক মানের প্রিমিয়াম ফিড সরবরাহ করে থাকে।' 
-                  : 'Providing 100% organic, premium seed mixes, imports, and veterinary supplements for birds, cats, fish, and rabbits.'}
+                  ? 'তাকওয়া এন্টারপ্রাইজ সততা ও বিশ্বাসের সাথে কবুতর ও পোষা প্রাণীর শতভাগ খাঁটি, ধুলোবালিমুক্ত পুষ্টিকর দানা বীজ এবং আন্তর্জাতিক মানের ফিড সরবরাহ করে থাকে।' 
+                  : 'Providing 100% dust-free, premium seed mixes, imports, and veterinary supplements for pigeons, birds, and pets.'}
               </p>
-              <div className="flex items-center gap-3 text-slate-400">
-                <span className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer">
+              <div className="flex items-center gap-2.5 text-slate-400">
+                <span className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">
                   f
                 </span>
-                <span className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer">
+                <span className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">
                   ▶
                 </span>
-                <span className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer">
+                <span className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">
                   💬
                 </span>
               </div>
             </div>
 
             {/* Column 2: Quick Links */}
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <h4 className="text-sm font-bold text-white tracking-wide uppercase border-b border-slate-800 pb-2">
                 {lang === 'bn' ? 'ক্যাটাগরি সমূহ' : 'Our Shop'}
               </h4>
-              <ul className="space-y-2.5 text-xs font-normal">
+              <ul className="space-y-2 text-xs font-normal">
                 {filterTabs.slice(1).map((tab) => (
                   <li key={tab.key}>
                     <button
@@ -2900,7 +3108,7 @@ export default function App() {
                         const el = document.getElementById('main-product-feed');
                         if (el) el.scrollIntoView({ behavior: 'smooth' });
                       }}
-                      className="hover:text-emerald-400 text-left transition-colors cursor-pointer"
+                      className="hover:text-blue-400 text-left transition-colors cursor-pointer"
                     >
                       {lang === 'bn' ? tab.bn : tab.en}
                     </button>
@@ -2910,34 +3118,34 @@ export default function App() {
             </div>
 
             {/* Column 3: Customer Service Links */}
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <h4 className="text-sm font-bold text-white tracking-wide uppercase border-b border-slate-800 pb-2">
                 {lang === 'bn' ? 'গ্রাহক সেবা' : 'Customer Service'}
               </h4>
-              <div className="grid grid-cols-1 gap-2.5 text-xs font-normal">
-                <span className="hover:text-emerald-400 cursor-pointer transition-colors">{lang === 'bn' ? 'প্রাইভেসি পলিসি ও নিরাপত্তা' : 'Privacy Policy & Protection'}</span>
-                <span className="hover:text-emerald-400 cursor-pointer transition-colors">{lang === 'bn' ? 'ক্রয় ও সরবরাহের শর্তাবলী' : 'Terms & Sales Conditions'}</span>
-                <span className="hover:text-emerald-400 cursor-pointer transition-colors">{lang === 'bn' ? 'সহজ রিফান্ড ও রিটার্ন নীতি' : 'Return & Easy Refund Policy'}</span>
-                <span className="hover:text-emerald-400 cursor-pointer transition-colors">{lang === 'bn' ? 'ডেলিভারি ট্র্যাকিং ও চার্জ' : 'Delivery Tracking & Rates'}</span>
+              <div className="grid grid-cols-1 gap-2 text-xs font-normal">
+                <span className="hover:text-blue-400 cursor-pointer transition-colors">{lang === 'bn' ? 'প্রাইভেসি পলিসি ও নিরাপত্তা' : 'Privacy Policy & Protection'}</span>
+                <span className="hover:text-blue-400 cursor-pointer transition-colors">{lang === 'bn' ? 'ক্রয় ও সরবরাহের শর্তাবলী' : 'Terms & Sales Conditions'}</span>
+                <span className="hover:text-blue-400 cursor-pointer transition-colors">{lang === 'bn' ? 'সহজ রিফান্ড ও রিটার্ন নীতি' : 'Return & Easy Refund Policy'}</span>
+                <span className="hover:text-blue-400 cursor-pointer transition-colors">{lang === 'bn' ? 'ডেলিভারি ট্র্যাকিং ও চার্জ' : 'Delivery Tracking & Rates'}</span>
               </div>
             </div>
 
             {/* Column 4: Secure Contacts & Payments */}
-            <div className="space-y-4 text-left">
+            <div className="space-y-3.5 text-left">
               <h4 className="text-sm font-bold text-white tracking-wide uppercase border-b border-slate-800 pb-2">
                 {lang === 'bn' ? 'যোগাযোগ ও পেমেন্ট' : 'Secure Checkout'}
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed font-normal">
                 {lang === 'bn' ? 'মোবাইল ব্যাংকিং (বিকাশ, নগদ, রকেট) এবং ক্যাশ অন ডেলিভারি সাপোর্ট।' : 'We support bKash, Nagad, Rocket, card transfers & Cash on Delivery.'}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {['bKash', 'Nagad', 'Rocket', 'Cash On Delivery'].map((pay) => (
-                  <span key={pay} className="bg-slate-800 text-[10px] text-slate-300 px-2 py-1 rounded-md border border-slate-750 font-bold">
+                  <span key={pay} className="bg-slate-800 text-[10px] text-slate-300 px-2 py-0.5 rounded border border-slate-700 font-semibold">
                     {pay}
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 font-normal font-mono">
+              <p className="text-xs text-slate-400 font-normal font-mono break-all sm:break-normal">
                 Email: taqwaenterpriseoffice@gmail.com<br />
                 Dhaka, Bangladesh
               </p>
@@ -2945,11 +3153,11 @@ export default function App() {
           </div>
 
           {/* Footer Bottom Copyright */}
-          <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800 text-center text-slate-500 font-normal">
-            <p className="mb-1 leading-relaxed">
+          <div className="max-w-7xl mx-auto pt-6 border-t border-slate-800 text-center text-slate-500 font-normal">
+            <p className="leading-relaxed">
               {lang === 'bn' 
-                ? 'তাকওয়া এন্টারপ্রাইজ | © ২০২৬ সর্বস্বত্ব সংরক্ষিত। দ্বীনি মেহনত ও সততায় পোষা প্রাণীর আসল খাদ্যের নির্ভরযোগ্য প্রতিষ্ঠান।' 
-                : 'Taqwa Enterprise | © 2026 All Rights Reserved. Trusted, organic feeds for birds, cats, fish, and rabbits.'}
+                ? 'তাকওয়া এন্টারপ্রাইজ | © ২০২৬ সর্বস্বত্ব সংরক্ষিত। দ্বীনি মেহনত ও সততায় কবুতর, পাখি ও পোষা প্রাণীর আসল খাদ্যের নির্ভরযোগ্য প্রতিষ্ঠান।' 
+                : 'Taqwa Enterprise | © 2026 All Rights Reserved. Trusted, organic feeds for pigeons, birds, and pets.'}
             </p>
           </div>
         </footer>
@@ -2957,7 +3165,7 @@ export default function App() {
 
       {/* 8. Mobile Bottom Navigation Bar (Feels exactly like a native app) */}
       {!isAdminView && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-slate-100 px-2 pb-5 pt-3 grid grid-cols-5 gap-1 items-center shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-md">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-slate-100 px-4 pb-5 pt-2.5 grid grid-cols-3 gap-2 items-center shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-md">
           {/* Home */}
           <button
             onClick={() => {
@@ -2968,59 +3176,16 @@ export default function App() {
             }}
             className={`flex flex-col items-center justify-center py-1 text-center transition-all duration-300 cursor-pointer relative ${
               currentPath === '/' && !isAdminView
-                ? 'text-emerald-600 scale-105 font-black'
+                ? 'text-blue-600 scale-105 font-black'
                 : 'text-slate-400 hover:text-slate-800'
             }`}
           >
-            <div className={`p-1 rounded-full transition-all duration-300 ${currentPath === '/' && !isAdminView ? 'bg-emerald-50 text-emerald-600' : ''}`}>
+            <div className={`p-1 rounded-full transition-all duration-300 ${currentPath === '/' && !isAdminView ? 'bg-blue-50 text-blue-600' : ''}`}>
               <Home className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-extrabold mt-0.5">{lang === 'bn' ? 'হোম' : 'Home'}</span>
             {currentPath === '/' && !isAdminView && (
-              <span className="absolute bottom-0 w-1 h-1 bg-emerald-600 rounded-full"></span>
-            )}
-          </button>
-
-          {/* Categories */}
-          <button
-            onClick={() => {
-              setIsAdminView(false);
-              setActiveTab('store');
-              navigate('/');
-              setIsCategoryDrawerOpen(true);
-            }}
-            className="flex flex-col items-center justify-center py-1 text-center text-slate-400 hover:text-slate-800 transition-all duration-300 cursor-pointer relative"
-          >
-            <div className="p-1 rounded-full transition-all duration-300">
-              <Grid className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-extrabold mt-0.5">{lang === 'bn' ? 'ক্যাটাগরি' : 'Categories'}</span>
-          </button>
-
-          {/* Wishlist */}
-          <button
-            onClick={() => {
-              setIsAdminView(false);
-              setActiveTab('wishlist');
-              navigate('/wishlist');
-            }}
-            className={`flex flex-col items-center justify-center py-1 text-center transition-all duration-300 cursor-pointer relative ${
-              currentPath === '/wishlist' && !isAdminView
-                ? 'text-rose-600 scale-105 font-black'
-                : 'text-slate-400 hover:text-slate-800'
-            }`}
-          >
-            <div className={`p-1 rounded-full transition-all duration-300 ${currentPath === '/wishlist' && !isAdminView ? 'bg-rose-50 text-rose-600' : ''}`}>
-              <Heart className={`w-5 h-5 ${currentPath === '/wishlist' && !isAdminView ? 'fill-current text-rose-500' : 'text-slate-400'}`} />
-            </div>
-            <span className="text-[10px] font-extrabold mt-0.5">{lang === 'bn' ? 'পছন্দ' : 'Wishlist'}</span>
-            {wishlist.length > 0 && (
-              <span className="absolute top-0.5 right-4 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                {wishlist.length}
-              </span>
-            )}
-            {currentPath === '/wishlist' && !isAdminView && (
-              <span className="absolute bottom-0 w-1 h-1 bg-rose-500 rounded-full"></span>
+              <span className="absolute bottom-0 w-1 h-1 bg-blue-600 rounded-full"></span>
             )}
           </button>
 
@@ -3029,16 +3194,16 @@ export default function App() {
             onClick={() => navigate('/cart')}
             className={`flex flex-col items-center justify-center py-1 text-center transition-all duration-300 cursor-pointer relative ${
               currentPath === '/cart'
-                ? 'text-emerald-600 scale-105 font-black'
+                ? 'text-blue-600 scale-105 font-black'
                 : 'text-slate-400 hover:text-slate-800'
             }`}
           >
-            <div className={`p-1 rounded-full transition-all duration-300 hover:bg-slate-50 ${currentPath === '/cart' ? 'bg-emerald-50 text-emerald-600' : ''}`}>
+            <div className={`p-1 rounded-full transition-all duration-300 hover:bg-slate-50 ${currentPath === '/cart' ? 'bg-blue-50 text-blue-600' : ''}`}>
               <ShoppingCart className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-extrabold mt-0.5">{lang === 'bn' ? 'কার্ট' : 'Cart'}</span>
             {cart.length > 0 && (
-              <span className="absolute top-0.5 right-4 bg-emerald-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-bounce">
+              <span className="absolute top-0.5 right-4 bg-blue-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-bounce">
                 {cart.reduce((sum, item) => sum + item.quantity, 0)}
               </span>
             )}
@@ -3055,16 +3220,16 @@ export default function App() {
             }}
             className={`flex flex-col items-center justify-center py-1 text-center transition-all duration-300 cursor-pointer relative ${
               currentPath === '/profile'
-                ? 'text-emerald-650 scale-105 font-black'
+                ? 'text-blue-600 scale-105 font-black'
                 : 'text-slate-400 hover:text-slate-800'
             }`}
           >
-            <div className={`p-1 rounded-full transition-all duration-300 ${currentPath === '/profile' ? 'bg-emerald-50 text-emerald-600' : ''}`}>
+            <div className={`p-1 rounded-full transition-all duration-300 ${currentPath === '/profile' ? 'bg-blue-50 text-blue-600' : ''}`}>
               <UserIcon className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-extrabold mt-0.5">{lang === 'bn' ? 'প্রোফাইল' : 'Profile'}</span>
             {currentPath === '/profile' && (
-              <span className="absolute bottom-0 w-1 h-1 bg-emerald-600 rounded-full"></span>
+              <span className="absolute bottom-0 w-1 h-1 bg-blue-600 rounded-full"></span>
             )}
           </button>
         </div>

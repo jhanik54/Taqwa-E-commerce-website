@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Star, Sparkles, MessageCirclePlus, Weight, FileText, Heart, ShoppingBag, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Star, Sparkles, MessageCirclePlus, Weight, FileText, ShoppingBag, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { Product } from '../types';
+import { DEFAULT_PRODUCT_IMAGE } from '../lib/cloudinary';
 
 interface ProductDetailsPageProps {
   productId: string;
@@ -10,8 +11,6 @@ interface ProductDetailsPageProps {
   onAddToCart: (product: Product) => void;
   onBuyNow?: (product: Product) => void;
   onReviewSubmit: (productId: string, userName: string, rating: number, comment: string, reviewId?: string) => Promise<void>;
-  isFavorite: boolean;
-  onToggleWishlist: (product: Product) => void;
 }
 
 export default function ProductDetailsPage({
@@ -21,9 +20,7 @@ export default function ProductDetailsPage({
   onBack,
   onAddToCart,
   onBuyNow,
-  onReviewSubmit,
-  isFavorite,
-  onToggleWishlist
+  onReviewSubmit
 }: ProductDetailsPageProps) {
   const isBn = lang === 'bn';
   const product = products.find(p => p.id === productId || p.slug === productId);
@@ -100,7 +97,11 @@ export default function ProductDetailsPage({
         <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold select-none">
           <span className="hover:text-emerald-600 cursor-pointer" onClick={onBack}>{isBn ? 'স্টোর' : 'Store'}</span>
           <span>/</span>
-          <span className="capitalize">{activeProduct.category}</span>
+          <span className="capitalize">
+            {isBn 
+              ? (activeProduct.category === 'pigeons' ? 'কবুতরের খাবার' : activeProduct.category === 'birds' ? 'পাখির খাবার' : activeProduct.category === 'medicine' || activeProduct.category === 'supplements' ? 'ঔষধ' : activeProduct.category === 'accessories' ? 'এক্সেসরিজ' : activeProduct.category) 
+              : (activeProduct.category === 'pigeons' ? 'Pigeon Feed' : activeProduct.category === 'birds' ? 'Bird Feed' : activeProduct.category === 'medicine' || activeProduct.category === 'supplements' ? 'Medicine' : activeProduct.category === 'accessories' ? 'Accessories' : activeProduct.category)}
+          </span>
           <span>/</span>
           <span className="text-slate-700 truncate max-w-[150px] sm:max-w-xs">{isBn ? activeProduct.banglaName : activeProduct.name}</span>
         </div>
@@ -123,6 +124,9 @@ export default function ProductDetailsPage({
             <img
               src={activeImage}
               alt={activeProduct.name}
+              onError={(e) => {
+                e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+              }}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               referrerPolicy="no-referrer"
             />
@@ -162,8 +166,8 @@ export default function ProductDetailsPage({
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-100 px-3.5 py-1 rounded-full uppercase tracking-wider">
                 {isBn 
-                  ? (activeProduct.category === 'birds' ? 'পাখি' : activeProduct.category === 'cats' ? 'বিড়াল' : activeProduct.category === 'fish' ? 'মাছ' : activeProduct.category === 'rabbits' ? 'খরগোশ' : activeProduct.category === 'accessories' ? 'একসেসরিজ' : 'সাপ্লিমেন্ট') 
-                  : activeProduct.category}
+                  ? (activeProduct.category === 'pigeons' ? 'কবুতরের খাবার' : activeProduct.category === 'birds' ? 'পাখির খাবার' : activeProduct.category === 'medicine' || activeProduct.category === 'supplements' ? 'ঔষধ' : activeProduct.category === 'accessories' ? 'এক্সেসরিজ' : activeProduct.category) 
+                  : (activeProduct.category === 'pigeons' ? 'Pigeon Feed' : activeProduct.category === 'birds' ? 'Bird Feed' : activeProduct.category === 'medicine' || activeProduct.category === 'supplements' ? 'Medicine' : activeProduct.category === 'accessories' ? 'Accessories' : activeProduct.category)}
               </span>
               {activeProduct.subcategory && (
                 <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200/55 px-3 py-1 rounded-full uppercase">
@@ -262,7 +266,7 @@ export default function ProductDetailsPage({
                 <span>{isBn ? 'ইনভেন্টরি অবস্থা' : 'Stock Status'}</span>
                 <span className="font-extrabold text-slate-700">
                   {activeProduct.stock > 0 
-                    ? `${activeProduct.stock} ${isBn ? 'পিস স্টক আছে' : 'items left'}` 
+                    ? `${activeProduct.stock} ${isBn ? 'কেজি স্টক আছে' : 'kg in stock'}` 
                     : (isBn ? 'স্টক শেষ' : 'Out of stock')}
                 </span>
               </div>
@@ -314,18 +318,6 @@ export default function ProductDetailsPage({
             >
               <span>⚡</span>
               <span>{isBn ? 'এখনই কিনুন' : 'Buy Now'}</span>
-            </button>
-
-            <button
-              onClick={() => onToggleWishlist(activeProduct)}
-              className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95 ${
-                isFavorite 
-                  ? 'bg-rose-50 border-rose-200 text-rose-500' 
-                  : 'bg-white border-slate-250 text-slate-400 hover:text-rose-500'
-              }`}
-              title={isFavorite ? (isBn ? 'পছন্দ তালিকা থেকে সরান' : 'Remove Favorites') : (isBn ? 'পছন্দে যোগ করুন' : 'Add Favorites')}
-            >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
           </div>
 

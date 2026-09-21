@@ -13,7 +13,8 @@ import {
   AlertOctagon, 
   Mail, 
   Phone,
-  Trash2
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { Order } from '../../types';
 
@@ -182,6 +183,12 @@ export default function OrderManagement({
                   </td>
                   <td className="py-3.5 px-4">
                     {getStatusBadge(o.orderStatus)}
+                    {o.courierName && (
+                      <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 w-fit">
+                        <Truck className="w-3 h-3 text-blue-500 shrink-0" />
+                        <span className="truncate max-w-[120px]">{o.courierName}: {o.consignmentId || 'Booked'}</span>
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex justify-center items-center gap-1">
@@ -265,6 +272,38 @@ export default function OrderManagement({
                 </select>
               </div>
 
+              {/* Courier shipment info if booked */}
+              {selectedOrder.courierName && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl space-y-2 text-blue-900">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase font-black tracking-wider flex items-center gap-1.5 text-blue-700">
+                      <Truck className="w-4 h-4 text-blue-600" />
+                      <span>কুরিয়ার বুকিং তথ্য ({selectedOrder.courierName})</span>
+                    </p>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                      {selectedOrder.courierStatus || 'Booked'}
+                    </span>
+                  </div>
+                  {selectedOrder.consignmentId && (
+                    <p className="font-extrabold text-xs flex items-center gap-1">
+                      <span>কনসাইনমেন্ট আইডি:</span>
+                      <span className="font-mono text-blue-700">{selectedOrder.consignmentId}</span>
+                    </p>
+                  )}
+                  {selectedOrder.courierTrackingUrl && (
+                    <a 
+                      href={selectedOrder.courierTrackingUrl} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-[11px] text-blue-600 hover:underline flex items-center gap-1 font-bold pt-1"
+                    >
+                      <span>লাইভ ট্র্যাকিং দেখুন</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              )}
+
               {/* Delivery info summary */}
               <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
                 <p className="text-slate-800 text-[10px] uppercase font-black tracking-wider">Shipment Credentials</p>
@@ -280,6 +319,18 @@ export default function OrderManagement({
                   <span>Address:</span>
                   <span className="text-slate-500 leading-relaxed">{selectedOrder.shippingAddress}, {selectedOrder.district}</span>
                 </p>
+                {selectedOrder.courierPoint && (
+                  <p className="font-extrabold text-slate-700 flex items-center gap-1.5 pt-0.5">
+                    <span className="text-emerald-700 font-bold">Courier Point:</span>
+                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md font-extrabold">{selectedOrder.courierPoint}</span>
+                  </p>
+                )}
+                {selectedOrder.courierName && (
+                  <p className="font-extrabold text-slate-700 flex items-center gap-1.5">
+                    <span>Courier:</span>
+                    <span className="text-slate-600">{selectedOrder.courierName}</span>
+                  </p>
+                )}
               </div>
 
               {/* Items listing */}
@@ -348,7 +399,7 @@ export default function OrderManagement({
                   <div>
                     <h2 className="text-xl font-black text-slate-900 uppercase">Taqwa Enterprise</h2>
                     <p className="text-[10px] text-slate-400 font-bold mt-0.5">High-Grade Pet food and Care Products</p>
-                    <p className="text-[10px] text-slate-500 font-bold">Dhaka, Bangladesh | Phone: 01999999999</p>
+                    <p className="text-[10px] text-slate-500 font-bold">Dhaka, Bangladesh | Phone: 01913955452</p>
                   </div>
                   <div className="text-right">
                     <p className="font-extrabold text-slate-900 text-sm">INVOICE RECEIPT</p>
@@ -365,6 +416,17 @@ export default function OrderManagement({
                     <p className="text-slate-600 font-bold">{invoiceOrder.customerPhone}</p>
                     {invoiceOrder.customerEmail && <p className="text-slate-500 font-mono text-[10px]">{invoiceOrder.customerEmail}</p>}
                     <p className="text-slate-500 font-medium leading-relaxed">{invoiceOrder.shippingAddress}, {invoiceOrder.district}</p>
+                    {invoiceOrder.courierPoint && (
+                      <p className="text-emerald-800 font-bold text-xs bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md mt-1 inline-block">
+                        <span className="font-bold text-emerald-950">Courier Point / শাখা: </span>
+                        <span className="font-black text-emerald-700">{invoiceOrder.courierPoint}</span>
+                      </p>
+                    )}
+                    {invoiceOrder.courierName && (
+                      <p className="text-slate-600 font-semibold text-[11px] mt-0.5">
+                        Courier: <span className="font-bold text-slate-800">{invoiceOrder.courierName}</span>
+                      </p>
+                    )}
                   </div>
                   <div className="text-right space-y-1">
                     <p className="text-[9px] text-slate-400 uppercase font-black">Transactional Info</p>
@@ -400,15 +462,29 @@ export default function OrderManagement({
 
                 {/* Ledger Calculations */}
                 <div className="flex justify-end pt-2 text-xs font-bold text-slate-600">
-                  <div className="w-56 space-y-2">
+                  <div className="w-64 space-y-1.5">
+                    {invoiceOrder.conditionAmount !== undefined && (
+                      <div className="flex justify-between">
+                        <span>Condition Amount</span>
+                        <span>৳{invoiceOrder.conditionAmount?.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {invoiceOrder.conditionCharge !== undefined && invoiceOrder.conditionCharge > 0 && (
+                      <div className="flex justify-between">
+                        <span>Condition Charge</span>
+                        <span>৳{invoiceOrder.conditionCharge?.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <span>Cart Subtotal</span>
-                      <span>৳{invoiceOrder.subtotal?.toLocaleString()}</span>
+                      <span>Carrying / Delivery Charge</span>
+                      <span>৳{(invoiceOrder.carryingCharge ?? invoiceOrder.deliveryCharge)?.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Delivery Surcharge</span>
-                      <span>৳{invoiceOrder.deliveryCharge?.toLocaleString()}</span>
-                    </div>
+                    {invoiceOrder.paymentCharge !== undefined && invoiceOrder.paymentCharge > 0 && (
+                      <div className="flex justify-between text-rose-600 font-bold">
+                        <span>{invoiceOrder.paymentMethod} Charge ({invoiceOrder.paymentChargeRate}%)</span>
+                        <span>+৳{invoiceOrder.paymentCharge?.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-slate-850 font-black text-sm border-t border-slate-200 pt-2 text-emerald-700">
                       <span>Grand Total Amount</span>
                       <span>৳{invoiceOrder.totalAmount?.toLocaleString()}</span>

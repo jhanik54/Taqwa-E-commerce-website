@@ -12,7 +12,7 @@ export interface Product {
   id: string;
   name: string;
   banglaName: string;
-  category: 'birds' | 'cats' | 'fish' | 'rabbits' | 'accessories' | 'supplements' | string;
+  category: 'pigeons' | 'birds' | 'medicine' | 'accessories' | 'supplements' | string;
   subcategory?: string;
   price: number; // in BDT
   originalPrice: number; // in BDT
@@ -71,7 +71,122 @@ export interface Order {
   paymentStatus: 'Pending' | 'Paid';
   paymentTransactionId?: string;
   orderStatus: 'Pending' | 'Confirmed' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Return Requested' | 'Refunded' | string;
+  courierName?: 'Steadfast' | 'Pathao' | 'RedX' | 'Sundarban' | 'Janani' | 'Paperfly' | 'In-House Rider' | string;
+  consignmentId?: string;
+  courierTrackingUrl?: string;
+  courierStatus?: 'Pending Booking' | 'Booked' | 'In Review' | 'Picked Up' | 'In Transit' | 'Out for Delivery' | 'Delivered' | 'Partial Delivery' | 'Return Pending' | 'Returned' | 'Cancelled' | string;
+  courierBookedAt?: string;
+  codAmount?: number;
+  weightKg?: number;
+  courierDeliveryCharge?: number;
+  courierCodFee?: number;
+  courierNotes?: string;
+  destinationBranch?: string;
+  courierPoint?: string;
+  deliveryType?: 'Home Delivery' | 'Branch / Office Pickup' | string;
+  // Product & Item Descriptions
+  productItemName?: string;
+  itemDescription?: string;
+  // Courier & Condition Details
+  conditionAmount?: number;
+  conditionCharge?: number;
+  conditionChargeType?: 'Cash' | 'To-Pay' | string;
+  carryingCharge?: number;
+  carryingChargeType?: 'Cash' | 'To-Pay' | string;
+  totalCondition?: number;
+  paymentCharge?: number;
+  paymentChargeRate?: number;
   createdAt: string;
+}
+
+export interface CourierParcel {
+  id: string;
+  orderId: string;
+  trackingId: string;
+  consignmentId: string;
+  cnNumber?: string;
+  courier: 'Steadfast' | 'Pathao' | 'RedX' | 'Sundarban' | 'Janani' | 'Paperfly' | 'In-House Rider' | string;
+  customerName: string;
+  customerPhone: string;
+  shippingAddress: string;
+  district: string;
+  itemsSummary: string;
+  productQuantity?: number;
+  weightKg: number;
+  codAmount: number;
+  deliveryCharge: number;
+  codFee: number;
+  totalPayableByCourier: number;
+  status: 'Booked' | 'Pending Pickup' | 'Picked Up' | 'In Transit' | 'Out for Delivery' | 'Delivered' | 'Partial Delivery' | 'Return Pending' | 'Returned' | 'Cancelled';
+  trackingUrl: string;
+  bookedAt: string;
+  lastUpdated?: string;
+  settlementStatus?: 'Unsettled' | 'Settled' | 'Refunded';
+  notes?: string;
+  riderName?: string;
+  riderPhone?: string;
+  destinationBranch?: string;
+  deliveryType?: 'Home Delivery' | 'Branch / Office Pickup' | 'O/D' | 'H/D' | string;
+  // Physical / Official CN slip fields
+  placeOfBooking?: string;
+  bookingDateStr?: string;
+  senderName?: string;
+  senderPhone?: string;
+  senderAddress?: string;
+  deliveryLocation?: string;
+  conditionAmount?: number;
+  conditionCharge?: number;
+  conditionChargeType?: 'Cash' | 'To-Pay' | string;
+  totalCondition?: number;
+  carryingCharge?: number;
+  carryingChargeType?: 'Cash' | 'To-Pay' | string;
+  vat?: number;
+  totalPaid?: number;
+  totalDue?: number;
+  amountInWords?: string;
+  bookingOfficer?: string;
+}
+
+export interface CourierAccountConfig {
+  apiKey?: string;
+  secretKey?: string;
+  storeId?: string;
+  clientSecret?: string;
+  senderPhone?: string;
+  senderAddress?: string;
+  branchCode?: string;
+  merchantCode?: string;
+  enabled: boolean;
+  sandboxMode?: boolean;
+}
+
+export interface CourierSettings {
+  defaultCourier: 'Steadfast' | 'Pathao' | 'RedX' | 'Sundarban' | 'Janani' | 'Paperfly' | 'In-House Rider';
+  autoUpdateOrderStatus: boolean;
+  sendCustomerSms: boolean;
+  senderName: string;
+  senderPhone: string;
+  senderAddress: string;
+  senderDistrict: string;
+  steadfast: CourierAccountConfig;
+  pathao: CourierAccountConfig;
+  redx: CourierAccountConfig;
+  sundarban: CourierAccountConfig;
+  janani: CourierAccountConfig;
+  paperfly: CourierAccountConfig;
+}
+
+export interface CourierPoint {
+  id: string;
+  name: string;
+  address: string;
+  contact: string;
+  courier: 'Steadfast' | 'Pathao' | 'RedX' | 'Sundarban' | 'Janani' | 'Paperfly' | 'SA Paribahan' | 'In-House Rider' | string;
+  district: string;
+  isActive: boolean;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface User {
@@ -87,6 +202,7 @@ export interface User {
   avatar?: string;
   status?: 'Active' | 'Inactive' | 'Banned';
   lastLogin?: string;
+  loyaltyPoints?: number;
 }
 
 export interface Address {
@@ -187,6 +303,86 @@ export interface ActivityLog {
   timestamp: string;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  companyName: string;
+  phone: string;
+  email?: string;
+  address: string;
+  totalPurchases: number;
+  paidAmount: number;
+  dueBalance: number;
+  status: 'Active' | 'Inactive';
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PurchaseItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  costPrice: number;
+  sellPrice?: number;
+  subtotal: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  supplierId: string;
+  supplierName: string;
+  items: PurchaseItem[];
+  totalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  paymentMethod: 'Cash' | 'bKash' | 'Bank' | 'Nagad' | 'Due' | string;
+  paymentStatus: 'Paid' | 'Partial' | 'Unpaid';
+  status: 'Received' | 'Pending' | 'Ordered' | 'Cancelled';
+  invoiceDate: string;
+  batchNo?: string;
+  notes?: string;
+}
+
+export interface Expense {
+  id: string;
+  title: string;
+  titleBn?: string;
+  category: 'Rent' | 'Salary' | 'Utilities' | 'Courier' | 'Packaging' | 'Feeding & Care' | 'Marketing' | 'Maintenance' | 'Office Supplies' | 'Other' | string;
+  amount: number;
+  paymentMethod: 'Cash' | 'bKash' | 'Nagad' | 'Bank' | string;
+  date: string;
+  referenceNo?: string;
+  notes?: string;
+  recordedBy: string;
+}
+
+export interface DamageWaste {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  costPerUnit: number;
+  totalLoss: number;
+  reason: 'Expired' | 'Broken/Damaged' | 'Spoiled/Rotten' | 'Missing/Audit Mismatch' | 'Sample/Test' | string;
+  date: string;
+  recordedBy: string;
+  status: 'Written Off' | 'Pending Review';
+  notes?: string;
+}
+
+export interface AccountTransaction {
+  id: string;
+  date: string;
+  type: 'Income' | 'Expense' | 'Transfer';
+  category: 'Order Sales' | 'Offline Counter Sale' | 'Supplier Payment' | 'Operating Expense' | 'Customer Due Recovery' | 'Tax & VAT' | 'Capital Inflow' | 'Bank Fee' | string;
+  amount: number;
+  method: 'Cash' | 'bKash' | 'Nagad' | 'Bank' | 'Rocket' | string;
+  description: string;
+  referenceId?: string;
+  operator: string;
+}
+
 export interface StoreSettings {
   storeName: string;
   logo: string;
@@ -210,6 +406,10 @@ export interface StoreSettings {
   rocketType?: 'Personal' | 'Agent' | 'Merchant';
   paymentInstructionsEn?: string;
   paymentInstructionsBn?: string;
+  codChargeRate?: number; // e.g. 1.00%
+  bkashChargeRate?: number; // e.g. 1.85%
+  nagadChargeRate?: number; // e.g. 1.5%
+  rocketChargeRate?: number; // e.g. 1.8%
   maintenanceMode?: boolean;
   orderIdPrefix?: string;
 }

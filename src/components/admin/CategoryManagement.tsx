@@ -10,9 +10,14 @@ import {
   Tag, 
   Eye, 
   EyeOff, 
-  Sliders 
+  Sliders,
+  Upload,
+  Loader2,
+  Check,
+  CheckCircle
 } from 'lucide-react';
 import { Category } from '../../types';
+import { uploadImage } from '../../lib/cloudinary';
 
 interface CategoryManagementProps {
   categories: Category[];
@@ -46,6 +51,42 @@ export default function CategoryManagement({
   const [enabled, setEnabled] = useState(true);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [subInput, setSubInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Immediate local preview so user sees their photo instantly
+    try {
+      const localUrl = URL.createObjectURL(file);
+      setImage(localUrl);
+    } catch (e) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) setImage(ev.target.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    setUploadingImage(true);
+    setUploadProgress(0);
+    try {
+      const url = await uploadImage(file, {
+        folder: 'taqwa_enterprise/categories',
+        onProgress: (percent) => setUploadProgress(percent),
+        compress: true
+      });
+      setImage(url);
+    } catch (err: any) {
+      console.warn('Image upload fallback notice:', err);
+      // Fallback handled gracefully
+    } finally {
+      setUploadingImage(false);
+      setUploadProgress(null);
+    }
+  };
 
   const handleOpenAdd = () => {
     setFormMode('add');
@@ -88,15 +129,45 @@ export default function CategoryManagement({
     setSubcategories(old => old.filter((_, i) => i !== idx));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!name.trim()) return;
+
+    let finalImageUrl = image;
+    if (finalImageUrl && finalImageUrl.startsWith('blob:')) {
+      try {
+        const blobRes = await fetch(finalImageUrl);
+        const blob = await blobRes.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: base64, filename: 'category_icon.jpg' })
+        });
+
+        if (uploadRes.ok) {
+          const uData = await uploadRes.json();
+          if (uData.url) {
+            finalImageUrl = uData.url;
+            setImage(uData.url);
+          }
+        }
+      } catch (blobErr) {
+        console.warn('Category image blob conversion fallback:', blobErr);
+      }
+    }
 
     const payload = {
       id: formMode === 'add' ? (id.trim() || name.toLowerCase().replace(/\s+/g, '-')) : id,
       name,
       banglaName,
-      image,
+      image: finalImageUrl,
       icon,
       displayOrder: Number(displayOrder),
       enabled,
@@ -262,15 +333,53 @@ export default function CategoryManagement({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label>Banner Image URL</label>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label>{isBn ? 'ক্যাটাগরি ব্যানার/আইকন ছবি' : 'Banner/Icon Image'}</label>
+                  <label className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300 transition-colors shadow-2xs">
+                    {uploadingImage ? (
+                      <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                    ) : (
+                      <Upload className="w-3 h-3 text-emerald-600" />
+                    )}
+                    <span>{uploadingImage ? `${uploadProgress || 0}%` : (isBn ? 'ডিভাইস থেকে ছবি আপলোড' : 'Upload from Device')}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  {image && (
+                    <img src={image} alt="Preview" className="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0 bg-white" />
+                  )}
                   <input
-                    type="text" value={image}
+                    type="text"
+                    value={image}
                     onChange={(e) => setImage(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px]"
+                    placeholder="https://..."
+                    className="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px]"
                   />
                 </div>
+
+                {/* Direct Confirm Save Button under Category Image */}
+                {image && (
+                  <button
+                    type="button"
+                    onClick={() => handleSubmit()}
+                    disabled={uploadingImage}
+                    className="w-full mt-1.5 py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                    <span>{isBn ? '✓ ক্যাটাগরি নিশ্চিত সংরক্ষণ করুন' : '✓ Confirm Save Category'}</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label>Lucide Icon Name</label>
                   <input
@@ -280,9 +389,6 @@ export default function CategoryManagement({
                     placeholder="Folder, Tag, Heart etc"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 items-center pt-2">
                 <div className="space-y-1">
                   <label>Display Sorting Order</label>
                   <input
@@ -291,9 +397,12 @@ export default function CategoryManagement({
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                   />
                 </div>
-                <label className="flex items-center gap-1.5 cursor-pointer mt-4 font-black">
-                  <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="rounded" />
-                  <span>Category Enabled</span>
+              </div>
+
+              <div className="pt-1">
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700">
+                  <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4" />
+                  <span>{isBn ? 'ক্যাটাগরি সক্রিয় রাখুন (Enabled)' : 'Category Active (Enabled)'}</span>
                 </label>
               </div>
 
@@ -338,15 +447,17 @@ export default function CategoryManagement({
               <div className="pt-4 border-t border-slate-100 flex justify-end gap-2 text-xs">
                 <button
                   type="button" onClick={() => setShowForm(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer transition-colors"
                 >
-                  Cancel
+                  {isBn ? 'বাতিল' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-md cursor-pointer"
+                  disabled={uploadingImage}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-md cursor-pointer flex items-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  Confirm Change
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>{isBn ? 'ক্যাটাগরি নিশ্চিত সংরক্ষণ করুন' : 'Confirm Save Category'}</span>
                 </button>
               </div>
 

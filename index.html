@@ -6,8 +6,12 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#10b981" />
     <title>Taqwa Enterprise</title>
+    <meta name="description" content="Taqwa Enterprise is a premium full-stack e-commerce marketplace specializing in Pigeon Feed, Bird Feed, Veterinary Medicine, and Accessories with an admin dashboard, inventory management, accounts, live tracking, and support." />
+    <meta property="og:title" content="Taqwa Enterprise" />
+    <meta property="og:description" content="Taqwa Enterprise is a premium full-stack e-commerce marketplace specializing in Pigeon Feed, Bird Feed, Veterinary Medicine, and Accessories with an admin dashboard, inventory management, accounts, live tracking, and support." />
     <script>
       if ("serviceWorker" in navigator && 
+          window.self === window.top &&
           !window.location.hostname.includes("localhost") && 
           !window.location.hostname.includes("studio") && 
           !window.location.hostname.includes("127.0.0.1") &&
@@ -15,7 +19,7 @@
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("/sw.js")
             .then((reg) => console.log("Service Worker registered successfully:", reg.scope))
-            .catch((err) => console.log("Service Worker registration failed:", err));
+            .catch((err) => console.log("Service Worker registration skipped:", err));
         });
       }
     </script>

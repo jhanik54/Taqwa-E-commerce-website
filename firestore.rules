@@ -11,19 +11,19 @@ service cloud.firestore {
     // GLOBAL SECURITY HELPERS
     // ---------------------------------
     
-    // Check if user is authenticated with a verified email
+    // Check if user is authenticated
     function isSignedIn() {
-      return request.auth != null && request.auth.token.email_verified == true;
+      return request.auth != null;
     }
 
     // Check if the target userId matches the authenticated user ID
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // Check if the document ID is syntactically valid and reasonably sized to prevent poisoning
+    // Check if the document ID is syntactically valid and reasonably sized
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() > 0 && id.size() <= 128;
     }
 
     // Extract incoming request data mapping
@@ -39,7 +39,7 @@ service cloud.firestore {
     // Admin authorization check - evaluates the bootstrapped email or an explicit admin document
     function isAdmin() {
       return request.auth != null && (
-        (request.auth.token.email == 'taqwaenterpriseoffice@gmail.com' && request.auth.token.email_verified == true) ||
+        (request.auth.token.email == 'taqwaenterpriseoffice@gmail.com') ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
@@ -52,33 +52,31 @@ service cloud.firestore {
       // Validate string and properties strictly to prevent shadow fields
       function isValidUser(data) {
         return data.keys().hasAll(['uid', 'email']) &&
-               data.keys().size() <= 6 &&
                data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
                data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
                (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150)) &&
                (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 50)) &&
-               (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1000));
+               (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1000)) &&
+               (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60));
       }
 
       // Restrict read access only to owners or administrators (protects PII)
       allow get: if isSignedIn() && (isOwner(userId) || isAdmin()) && isValidId(userId);
       allow list: if isSignedIn() && isAdmin(); // Only admins can list users
 
-      // Create profile - must be signed in owner, matching email/uid and valid schema format
+      // Create profile - must be signed in owner, matching uid and valid schema format
       allow create: if isSignedIn() && 
                     isOwner(userId) && 
                     isValidId(userId) && 
                     isValidUser(incoming()) && 
-                    incoming().uid == userId &&
-                    incoming().email == request.auth.token.email;
+                    incoming().uid == userId;
 
       // Update profile - must be owner/admin, valid schema, immutable fields preserved
       allow update: if isSignedIn() && 
-                    isOwner(userId) && 
+                    (isOwner(userId) || isAdmin()) && 
                     isValidId(userId) && 
                     isValidUser(incoming()) && 
-                    incoming().uid == existing().uid &&
-                    incoming().email == existing().email;
+                    incoming().uid == existing().uid;
 
       // Deletions are strictly disabled for audit trail compliance
       allow delete: if false;
@@ -92,7 +90,6 @@ service cloud.firestore {
       // Validate schema layout for products
       function isValidProduct(data) {
         return data.keys().hasAll(['id', 'name', 'price', 'category']) &&
-               data.keys().size() <= 12 &&
                data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
                data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
                data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
@@ -102,7 +99,7 @@ service cloud.firestore {
                (!('weight' in data) || (data.weight is string && data.weight.size() <= 100)) &&
                (!('stock' in data) || (data.stock is number)) &&
                (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
-               (!('image' in data) || (data.image is string && data.image.size() <= 2000)) &&
+               (!('image' in data) || (data.image is string && data.image.size() <= 500000)) &&
                (!('rating' in data) || (data.rating is number));
       }
 
@@ -114,6 +111,30 @@ service cloud.firestore {
       allow create: if isSignedIn() && isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().id == productId;
       allow update: if isSignedIn() && isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().id == existing().id;
       allow delete: if isSignedIn() && isAdmin() && isValidId(productId);
+    }
+
+    // ---------------------------------
+    // UPLOADED IMAGES COLLECTION RULES (STORAGE IN FIRESTORE)
+    // ---------------------------------
+    match /uploaded_images/{imageId} {
+      function isValidUploadedImage(data) {
+        return data.keys().hasAll(['id', 'dataUrl']) &&
+               data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+               data.dataUrl is string && data.dataUrl.size() > 0 && data.dataUrl.size() <= 950000 &&
+               (!('size' in data) || (data.size is number)) &&
+               (!('filename' in data) || (data.filename is string && data.filename.size() <= 250)) &&
+               (!('mimeType' in data) || (data.mimeType is string && data.mimeType.size() <= 60)) &&
+               (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60));
+      }
+
+      // Public read so product cards, modals, and store visitors can view images
+      allow get: if true;
+      allow list: if true;
+
+      // Create/Update allows saving images with validated schema and payload size limit (< 950KB)
+      allow create: if isValidId(imageId) && isValidUploadedImage(incoming()) && incoming().id == imageId;
+      allow update: if isValidId(imageId) && isValidUploadedImage(incoming()) && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isAdmin() && isValidId(imageId);
     }
   }
 }

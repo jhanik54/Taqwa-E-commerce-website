@@ -11,7 +11,7 @@ interface MaintenanceScreenProps {
 export default function MaintenanceScreen({
   lang,
   onAdminLoginClick,
-  supportPhone = '01999999999',
+  supportPhone = '01913955452',
   supportEmail = 'taqwaenterpriseoffice@gmail.com'
 }: MaintenanceScreenProps) {
   const isBn = lang === 'bn';

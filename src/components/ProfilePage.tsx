@@ -7,6 +7,7 @@ import {
   Package, Truck, MessageSquare, Headphones, LogOut, Settings, Clock, AlertCircle
 } from 'lucide-react';
 import { User, Address, StoreNotification, Order } from '../types';
+import { uploadImage } from '../lib/cloudinary';
 
 interface ProfilePageProps {
   user: User;
@@ -167,8 +168,73 @@ export default function ProfilePage({
   // Active view: on mobile we show a list of services (null = Dashboard list)
   // Clicking a service changes the subview so that mobile remains ultra clean, backable, and robust.
   // On desktop we can keep a side-by-side split layout.
-  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'notifications'>('profile');
-  const [mobileSubView, setMobileSubView] = useState<'profile' | 'addresses' | 'notifications' | null>(null);
+  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'notifications' | 'loyalty'>('profile');
+  const [mobileSubView, setMobileSubView] = useState<'profile' | 'addresses' | 'notifications' | 'loyalty' | null>(null);
+
+  // Loyalty states
+  const [livePoints, setLivePoints] = useState(user.loyaltyPoints || 0);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemedCoupon, setRedeemedCoupon] = useState<{ code: string; value: number } | null>(null);
+  const [copiedCouponId, setCopiedCouponId] = useState(false);
+
+  const fetchLivePoints = async () => {
+    if (!user.email) return;
+    try {
+      const res = await fetch(`/api/loyalty/points?email=${encodeURIComponent(user.email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLivePoints(data.loyaltyPoints);
+      }
+    } catch (err) {
+      console.error("Failed to fetch live points:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchLivePoints();
+  }, [user.email]);
+
+  const handleRedeemPoints = async (points: number) => {
+    if (livePoints < points) {
+      alert(isBn ? 'আপনার পর্যাপ্ত লয়ালটি পয়েন্ট নেই।' : 'You do not have enough loyalty points.');
+      return;
+    }
+    
+    setIsRedeeming(true);
+    try {
+      const res = await fetch('/api/loyalty/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: user.email,
+          pointsToRedeem: points
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to redeem points');
+      }
+
+      const data = await res.json();
+      setLivePoints(data.pointsLeft);
+      setRedeemedCoupon({
+        code: data.couponCode,
+        value: data.value
+      });
+      
+      if (onUpdateUser) {
+        onUpdateUser({ loyaltyPoints: data.pointsLeft });
+      }
+
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
 
   // Profile Form State
   const [name, setName] = useState(user.name || '');
@@ -200,8 +266,6 @@ export default function ProfilePage({
     setAvatarStatus(isBn ? 'প্রোফাইল ছবি প্রস্তুত করা হচ্ছে...' : 'Processing profile picture...');
 
     try {
-      const { uploadImage } = await import('../lib/cloudinary');
-      
       const url = await uploadImage(file, {
         onProgress: (percent) => {
           setAvatarProgress(percent);
@@ -408,16 +472,23 @@ export default function ProfilePage({
         </div>
 
         {/* Quick Stats Block */}
-        <div className="grid grid-cols-3 gap-3 self-center bg-white/10 border border-white/10 p-3.5 rounded-2xl backdrop-blur-xs max-w-full md:max-w-xs w-full text-center">
+        <div className="grid grid-cols-4 gap-2.5 self-center bg-white/10 border border-white/10 p-3 rounded-2xl backdrop-blur-xs max-w-full md:max-w-sm w-full text-center">
           <div className="space-y-0.5">
             <p className="text-[9px] text-emerald-100 font-bold uppercase tracking-wider">{labels.addresses}</p>
             <p className="text-lg font-black">{user.addresses?.length || 0}</p>
           </div>
-          <div className="space-y-0.5 border-x border-white/10">
+          <div className="space-y-0.5 border-l border-white/10">
             <p className="text-[9px] text-emerald-100 font-bold uppercase tracking-wider">{labels.alerts}</p>
             <p className="text-lg font-black">{notifications.length}</p>
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 border-l border-white/10">
+            <p className="text-[9px] text-emerald-100 font-bold uppercase tracking-wider">{isBn ? 'পয়েন্টস' : 'Points'}</p>
+            <p className="text-lg font-black text-amber-300 font-mono flex items-center justify-center gap-0.5">
+              <Sparkles className="w-3.5 h-3.5 fill-amber-300 text-amber-300 shrink-0" />
+              <span>{livePoints}</span>
+            </p>
+          </div>
+          <div className="space-y-0.5 border-l border-white/10">
             <p className="text-[9px] text-emerald-100 font-bold uppercase tracking-wider">{labels.unread}</p>
             <p className="text-lg font-black text-rose-300 font-mono animate-pulse">{unreadNotifications}</p>
           </div>
@@ -500,6 +571,7 @@ export default function ProfilePage({
                   { id: 'profile', title: labels.personalProfile, desc: labels.personalProfileDesc, icon: UserIcon, color: 'bg-emerald-50 text-emerald-600' },
                   { id: 'addresses', title: labels.addressBook, desc: labels.addressBookDesc, icon: MapPin, color: 'bg-indigo-50 text-indigo-600', badge: user.addresses?.length },
                   { id: 'notifications', title: labels.notifications, desc: labels.notificationsDesc, icon: Bell, color: 'bg-rose-50 text-rose-600', badge: unreadNotifications },
+                  { id: 'loyalty', title: isBn ? 'তাকওয়া লয়ালটি পয়েন্ট' : 'Taqwa Loyalty points', desc: isBn ? 'পয়েন্ট রিডিম করে গিফট কুপন নিন' : 'Redeem points for gift coupons', icon: Award, color: 'bg-amber-50 text-amber-600', badge: livePoints > 0 ? livePoints : undefined },
                   { id: 'track', title: labels.orderTracking, desc: labels.orderTrackingDesc, icon: Truck, color: 'bg-amber-50 text-amber-600' },
                   { id: 'support', title: labels.support, desc: labels.supportDesc, icon: Headphones, color: 'bg-purple-50 text-purple-600' }
                 ].map((serv) => {
@@ -572,6 +644,7 @@ export default function ProfilePage({
               {mobileSubView === 'profile' && renderProfileForm()}
               {mobileSubView === 'addresses' && renderAddressesForm()}
               {mobileSubView === 'notifications' && renderNotificationsForm()}
+              {mobileSubView === 'loyalty' && renderLoyaltyForm()}
             </div>
           </motion.div>
         )}
@@ -591,7 +664,8 @@ export default function ProfilePage({
               {[
                 { id: 'profile', label: labels.personalProfile, desc: labels.personalProfileDesc, icon: UserIcon },
                 { id: 'addresses', label: labels.addressBook, desc: labels.addressBookDesc, icon: MapPin, badge: user.addresses?.length },
-                { id: 'notifications', label: labels.notifications, desc: labels.notificationsDesc, icon: Bell, badge: unreadNotifications, badgeColor: 'bg-rose-500' }
+                { id: 'notifications', label: labels.notifications, desc: labels.notificationsDesc, icon: Bell, badge: unreadNotifications, badgeColor: 'bg-rose-500' },
+                { id: 'loyalty', label: isBn ? 'তাকওয়া লয়ালটি রিওয়ার্ড' : 'Taqwa Loyalty Rewards', desc: isBn ? 'পয়েন্ট দিয়ে কুপন রিডিম করুন' : 'Redeem earned points for gift coupons', icon: Award, badge: livePoints > 0 ? livePoints : undefined, badgeColor: 'bg-amber-500' }
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isSelected = activeTab === tab.id;
@@ -746,6 +820,18 @@ export default function ProfilePage({
                   transition={{ duration: 0.15 }}
                 >
                   {renderNotificationsForm()}
+                </motion.div>
+              )}
+
+              {activeTab === 'loyalty' && (
+                <motion.div
+                  key="loyalty-tab-desktop"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {renderLoyaltyForm()}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1241,6 +1327,212 @@ export default function ProfilePage({
               );
             })
           )}
+        </div>
+      </div>
+    );
+  }
+
+  function renderLoyaltyForm() {
+    const tiers = [
+      { points: 50, value: 50, minOrder: 100, titleBn: "৳৫০ ডিসকাউন্ট কুপন", descBn: "৫০ পয়েন্টের বিনিময়ে যেকোনো অর্ডারে ৳৫০ ফ্ল্যাট ছাড় পান।" },
+      { points: 100, value: 100, minOrder: 200, titleBn: "৳১০০ ডিসকাউন্ট কুপন", descBn: "১০০ পয়েন্টের বিনিময়ে যেকোনো অর্ডারে ৳১০০ ফ্ল্যাট ছাড় পান।" },
+      { points: 200, value: 200, minOrder: 400, titleBn: "৳২০০ ডিসকাউন্ট কুপন", descBn: "২০০ পয়েন্টের বিনিময়ে যেকোনো অর্ডারে ৳২০০ ফ্ল্যাট ছাড় পান।" },
+      { points: 500, value: 500, minOrder: 1000, titleBn: "৳৫০০ ডিসকাউন্ট কুপন", descBn: "৫০০ পয়েন্টের বিনিময়ে যেকোনো অর্ডারে ৳৫০০ ফ্ল্যাট ছাড় পান।" },
+    ];
+
+    const handleCopyRedeemedCoupon = (code: string) => {
+      navigator.clipboard.writeText(code);
+      setCopiedCouponId(true);
+      setTimeout(() => setCopiedCouponId(false), 2000);
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Header Block */}
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+          <span className="p-2.5 rounded-2xl bg-amber-50 text-amber-600">
+            <Award className="w-5 h-5" />
+          </span>
+          <div>
+            <h3 className="text-base font-black text-slate-800">
+              {isBn ? "তাকওয়া লয়ালটি পয়েন্ট ও রিওয়ার্ড" : "Taqwa Loyalty & Rewards Hub"}
+            </h3>
+            <p className="text-xs text-slate-400 font-bold mt-0.5">
+              {isBn 
+                ? "৳১০০ অর্ডারে ১ পয়েন্ট অর্জন করুন এবং রিওয়ার্ড কুপন রেডিম করুন" 
+                : "Earn 1 point per ৳100 and redeem them for shopping vouchers"}
+            </p>
+          </div>
+        </div>
+
+        {/* Big Balance Gauge Card */}
+        <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
+          <div className="space-y-2 text-center md:text-left">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-wider">
+              <Sparkles className="w-3 h-3 text-amber-200 fill-amber-200" />
+              <span>{isBn ? "আপনার সঞ্চিত পয়েন্ট" : "Your Loyalty Balance"}</span>
+            </span>
+            <div className="flex items-baseline justify-center md:justify-start gap-1">
+              <span className="text-5xl font-black tracking-tight">{livePoints}</span>
+              <span className="text-sm font-bold text-amber-100">{isBn ? " পয়েন্ট" : " pts"}</span>
+            </div>
+            <p className="text-[11px] font-bold text-amber-100 max-w-sm">
+              {isBn 
+                ? "আমাদের শপ থেকে সফলভাবে পণ্য ডেলিভারি সম্পন্ন হলেই অ্যাকাউন্টে পয়েন্ট যোগ হয়।" 
+                : "Points are credited automatically once your order status is marked as Delivered."}
+            </p>
+          </div>
+
+          <div className="shrink-0 bg-white/10 border border-white/10 rounded-2xl p-4 text-center backdrop-blur-xs max-w-[240px]">
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-100 mb-1">{isBn ? "১ পয়েন্টের মূল্য" : "Point Value"}</p>
+            <p className="text-xl font-black text-white">৳১.০০</p>
+            <p className="text-[9px] text-amber-200 font-bold mt-1 leading-snug">
+              {isBn ? "সফল ডেলিভারির মোট মূল্য (ডেলিভারি চার্জ বাদে) এর ১% লয়ালটি পয়েন্ট হিসেবে ব্যাক পাবেন।" : "Get 1% of your order total (excluding delivery charge) as loyalty rewards."}
+            </p>
+          </div>
+        </div>
+
+        {/* Redeemed Coupon Success View */}
+        {redeemedCoupon && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-5 bg-emerald-50 border-2 border-emerald-300 rounded-3xl space-y-4 shadow-sm relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-100/50 rounded-full blur-md pointer-events-none" />
+            <div className="flex items-center gap-2.5">
+              <span className="p-1.5 bg-emerald-500 text-white rounded-full">
+                <Check className="w-4 h-4 stroke-[3]" />
+              </span>
+              <div>
+                <h4 className="text-xs font-black text-emerald-950">{isBn ? "কুপন কোড তৈরি হয়েছে!" : "Coupon Code Generated!"}</h4>
+                <p className="text-[10px] font-bold text-emerald-700">
+                  {isBn 
+                    ? `আপনি সফলভাবে ${redeemedCoupon.value} পয়েন্ট রিডিম করে ৳${redeemedCoupon.value} টাকার ফ্ল্যাট ডিসকাউন্ট কুপন তৈরি করেছেন।`
+                    : `Successfully redeemed ${redeemedCoupon.value} points for a flat ৳${redeemedCoupon.value} discount coupon.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-white border border-emerald-200 rounded-2xl">
+              <div className="flex-1 text-center sm:text-left space-y-0.5">
+                <p className="text-[8px] font-extrabold text-emerald-600 uppercase tracking-widest">{isBn ? "রিওয়ার্ড কুপন কোড" : "REWARD COUPON CODE"}</p>
+                <p className="font-mono text-lg font-black text-emerald-900 tracking-wider select-all uppercase">{redeemedCoupon.code}</p>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleCopyRedeemedCoupon(redeemedCoupon.code)}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black cursor-pointer flex items-center gap-1.5 transition-all shadow-xs"
+                >
+                  {copiedCouponId ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>{isBn ? "কপি হয়েছে!" : "Copied!"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>{isBn ? "কপি কোড" : "Copy Code"}</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRedeemedCoupon(null)}
+                  className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black cursor-pointer transition-all"
+                >
+                  {isBn ? "বন্ধ করুন" : "Dismiss"}
+                </button>
+              </div>
+            </div>
+            <p className="text-[9px] text-emerald-600 font-bold text-center sm:text-left">
+              💡 {isBn ? "এই কুপনটি পরবর্তী অর্ডারের সময় চেকআউট পেজে ব্যবহার করুন।" : "Apply this coupon code in checkout page on your next purchase."}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Tiers Grid */}
+        <div className="space-y-4">
+          <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider pl-1">
+            {isBn ? "পয়েন্ট এক্সচেঞ্জ করুন (রিওয়ার্ড টায়ার সমূহ)" : "Redeem Points Tiers"}
+          </h4>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {tiers.map((tier) => {
+              const canRedeem = livePoints >= tier.points;
+              return (
+                <div 
+                  key={tier.points} 
+                  className={`p-5 rounded-3xl border transition-all flex flex-col justify-between gap-4 relative group ${
+                    canRedeem 
+                      ? 'bg-white border-slate-150 hover:border-amber-400 hover:shadow-xs' 
+                      : 'bg-slate-50/50 border-slate-100 opacity-75'
+                  }`}
+                >
+                  {/* Tier Badge */}
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-wider border border-amber-100">
+                        <Ticket className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <span>{tier.points} {isBn ? "পয়েন্ট" : "Points"}</span>
+                      </span>
+                      <h5 className="text-sm font-black text-slate-800 group-hover:text-amber-700 transition-colors">
+                        {isBn ? tier.titleBn : `৳${tier.value} Discount Voucher`}
+                      </h5>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-black text-slate-800">৳{tier.value}</p>
+                      <p className="text-[8px] text-slate-400 font-bold">{isBn ? "ফ্ল্যাট ডিসকাউন্ট" : "Flat Discount"}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                    {isBn ? tier.descBn : `Redeem ${tier.points} points to get a flat ৳${tier.value} discount coupon code.`} 
+                    <span className="block text-[9px] text-slate-400 font-bold mt-1">
+                      ⚠️ {isBn ? `ন্যূনতম অর্ডার মূল্য: ৳${tier.minOrder}` : `Minimum order value: ৳${tier.minOrder}`}
+                    </span>
+                  </p>
+
+                  <button
+                    type="button"
+                    disabled={!canRedeem || isRedeeming}
+                    onClick={() => handleRedeemPoints(tier.points)}
+                    className={`w-full py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+                      canRedeem
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-150'
+                    }`}
+                  >
+                    {isRedeeming ? (
+                      <span>{isBn ? "প্রসেসিং হচ্ছে..." : "Redeeming..."}</span>
+                    ) : (
+                      <>
+                        <Sparkles className={`w-3.5 h-3.5 ${canRedeem ? 'text-amber-200 fill-amber-200' : 'text-slate-400'}`} />
+                        <span>{isBn ? `${tier.points} পয়েন্ট এক্সচেঞ্জ করুন` : `Exchange ${tier.points} Points`}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Earning & Rules FAQ */}
+        <div className="p-5 bg-slate-50 border border-slate-100 rounded-3xl space-y-3">
+          <h5 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{isBn ? "পয়েন্ট অর্জনের নিয়মাবলী" : "How Earning Points Works"}</span>
+          </h5>
+          <ul className="space-y-2 text-[11px] font-semibold text-slate-500 leading-relaxed list-disc list-inside">
+            <li>{isBn ? "তাকওয়া এন্টারপ্রাইজ থেকে যেকোনো সফল পারচেজের মোট মূল্যের ওপর ভিত্তি করে পয়েন্ট হিসেব করা হয়।" : "Points are calculated based on your total order value from Taqwa Enterprise."}</li>
+            <li>{isBn ? "অর্ডার ডেলিভারি চার্জ বাদে প্রতি ৳১০০ টাকা ক্রয়ের বিপরীতে ১ লয়ালটি পয়েন্ট লাভ করবেন।" : "Earn exactly 1 point for every ৳100 spent (excluding shipping charges)."}</li>
+            <li>{isBn ? "উদাহরণস্বরূপ: আপনি যদি ৳১,০৫০ টাকার পণ্য অর্ডার করেন (ডেলিভারি চার্জ ছাড়া), তবে আপনার অর্ডারটি ডেলিভারড হওয়ার সাথে সাথে আপনার ব্যালেন্সে ১০ লয়ালটি পয়েন্ট যুক্ত হবে।" : "For example: if you buy items worth ৳1,050 (excl. shipping), you will get 10 points when marked delivered."}</li>
+            <li>{isBn ? "যেকোনো বাতিল বা রিফান্ড হওয়া অর্ডারের ক্ষেত্রে অর্জিত পয়েন্ট স্বয়ংক্রিয়ভাবে ব্যালেন্স থেকে বিয়োগ করা হবে।" : "Canceled or returned orders will automatically have their corresponding loyalty points deducted."}</li>
+          </ul>
         </div>
       </div>
     );

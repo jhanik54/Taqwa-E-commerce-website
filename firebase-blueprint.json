@@ -92,6 +92,42 @@
         "price",
         "category"
       ]
+    },
+    "UploadedImage": {
+      "title": "UploadedImage",
+      "description": "Compressed image binary data and metadata stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique image document ID"
+        },
+        "filename": {
+          "type": "string",
+          "description": "Original filename"
+        },
+        "dataUrl": {
+          "type": "string",
+          "description": "Base64 encoded compressed image data URL"
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type (e.g. image/jpeg, image/webp)"
+        },
+        "size": {
+          "type": "number",
+          "description": "Size in bytes"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp of upload"
+        }
+      },
+      "required": [
+        "id",
+        "dataUrl"
+      ]
     }
   },
   "firestore": {
@@ -102,6 +138,10 @@
     "products/{productId}": {
       "schema": "Product",
       "description": "Store products database collection"
+    },
+    "uploaded_images/{imageId}": {
+      "schema": "UploadedImage",
+      "description": "Uploaded product images collection"
     }
   }
 }

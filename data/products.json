@@ -1,0 +1,607 @@
+[
+  {
+    "id": "pigeons-1789281905107",
+    "name": "Gugu 60TK",
+    "banglaName": "ঘুঘু ৬০টাকা",
+    "category": "pigeons",
+    "price": 60,
+    "originalPrice": 60,
+    "weight": "1 Kg",
+    "stock": 10,
+    "description": "গম,কুসুম ফুলের বীজ, বিভিন্ন ধরনের ডাল, বাজরা, ভুট্টা ভাঙ্গা, অন্যান্য শস্য বীজ ",
+    "banglaDescription": "গম,কুসুম ফুলের বীজ, বিভিন্ন ধরনের ডাল, বাজরা, ভুট্টা ভাঙ্গা, অন্যান্য শস্য বীজ ",
+    "image": "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg",
+    "rating": 4.8,
+    "reviewsCount": 0,
+    "tags": [
+      "Pigeons",
+      "Seed",
+      "Mix"
+    ],
+    "featured": false,
+    "newArrival": true,
+    "bestSeller": false,
+    "images": [
+      "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg"
+    ],
+    "variants": [
+      "1 Kg"
+    ],
+    "sku": "TQW-428408",
+    "barcode": "624054176851",
+    "seoTitle": "Gugu 60TK | Taqwa Enterprise",
+    "seoDescription": "গম,কুসুম ফুলের বীজ, বিভিন্ন ধরনের ডাল, বাজরা, ভুট্টা ভাঙ্গা, অন্যান্য শস্য বীজ ",
+    "reviews": []
+  },
+  {
+    "id": "birds-1788113680007",
+    "name": "Pigeon Mix",
+    "banglaName": "কবুতরের খাবার",
+    "price": 55,
+    "originalPrice": 55,
+    "stock": 20,
+    "weight": "1 Kg",
+    "category": "pigeons",
+    "subcategory": "মিক্সড দানা",
+    "image": "/uploads/tqw_1789119683791_48vbj_1000013587_jpg.jpg",
+    "images": [
+      "/uploads/tqw_1789119683791_48vbj_1000013587_jpg.jpg"
+    ],
+    "imagesGallery": [
+      "/uploads/tqw_1789119683791_48vbj_1000013587_jpg.jpg"
+    ],
+    "featured": true,
+    "newArrival": true,
+    "bestSeller": false,
+    "rating": 4.8,
+    "reviewsCount": 0,
+    "reviews": [],
+    "sku": "TQW-831070",
+    "barcode": "301438004690",
+    "tags": [
+      "bird",
+      "seed",
+      "pigeon"
+    ],
+    "variants": [
+      "1 Kg"
+    ],
+    "description": "তাকওয়া প্রিমিয়াম কবুতরের খাবার মিক্সড দানা",
+    "banglaDescription": "তাকওয়া প্রিমিয়াম কবুতরের খাবার মিক্সড দানা"
+  },
+  {
+    "id": "pigeon-1",
+    "name": "Taqwa Premium Super Mixed Pigeon Food (12 Grain Formulation)",
+    "banglaName": "তাকওয়া প্রিমিয়াম সুপার কবুতর মিক্স দানা (১২ প্রকার শস্যের পুষ্টি)",
+    "category": "pigeons",
+    "price": 380,
+    "originalPrice": 450,
+    "weight": "2.5 Kg",
+    "stock": 150,
+    "description": "Premium 100% dust-free cleaned pigeon grain mix. Made with Canadian yellow peas, green peas, wheat, red corn, safflower, dari, and millets. Guarantees top stamina, muscle density, and breeding performance.",
+    "banglaDescription": "১০০% ধুলাবালিমুক্ত বাছাইকৃত ১২ প্রকারের শস্যদানা সমৃদ্ধ সুষম কবুতরের খাবার। এতে রয়েছে হলুদ ও সবুজ মটর, লাল ভুট্টা, গম, কুসুম ফুল বীজ ও বাজরা। কবুতরের শক্তি বৃদ্ধি ও ব্রিডিং পারফরম্যান্সের জন্য অত্যন্ত কার্যকর।",
+    "image": "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg",
+    "rating": 4.9,
+    "reviewsCount": 28,
+    "tags": [
+      "Pigeon Food",
+      "Super Mix",
+      "12 Grain",
+      "Breeding Diet"
+    ],
+    "featured": true,
+    "bestSeller": true,
+    "recommended": false,
+    "subcategory": "মিক্সড দানা",
+    "variants": [
+      "2.5 Kg",
+      "Pack of 2 (5 Kg)",
+      "Bulk Bag (25 Kg)"
+    ],
+    "imagesGallery": [
+      "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg"
+    ],
+    "reviews": [
+      {
+        "id": "rev-p1",
+        "userName": "Md. Tanvir Hasan",
+        "rating": 5,
+        "comment": "Best mixed pigeon food in Bangladesh. Grain size and clean quality is 10/10.",
+        "date": "2026-06-10"
+      }
+    ]
+  },
+  {
+    "id": "pigeon-2",
+    "name": "High Flyer & Racing Homer Energy Boost Feed",
+    "banglaName": "হাই ফ্লায়ার ও রেসিং কবুতরের এনার্জি বুস্ট স্পেশাল খাদ্য",
+    "category": "pigeons",
+    "price": 520,
+    "originalPrice": 620,
+    "weight": "2 Kg",
+    "stock": 80,
+    "description": "Specially formulated for racing pigeons, homers, and high-flying breeds. Packed with high carbohydrate energy seeds and plant proteins for endurance and quick wing recovery.",
+    "banglaDescription": "রেসিং ও হাই ফ্লায়ার কবুতরের দীর্ঘ উড্ডয়ন ও দ্রুত ক্লান্তি দূর করার বিশেষ শস্যদানা। এতে আছে উচ্চ কার্বোহাইড্রেট ও প্রোটিন যা ডানার শক্তি ও পেশী মজবুত করে।",
+    "image": "https://images.unsplash.com/photo-1522858547137-f1dcec554f55?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.8,
+    "reviewsCount": 19,
+    "tags": [
+      "Racing Pigeon",
+      "Energy Boost",
+      "High Flyer"
+    ],
+    "featured": true,
+    "bestSeller": false,
+    "recommended": true,
+    "subcategory": "রেসিং সিড মিক্স",
+    "variants": [
+      "2 Kg",
+      "Pack of 2 (4 Kg)",
+      "Bag (10 Kg)"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1522858547137-f1dcec554f55?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "pigeon-3",
+    "name": "Organic Red Stone Mineral Grit & Oyster Shell for Pigeons",
+    "banglaName": "কবুতরের অর্গানিক লাল মাটি মিনারেল গ্রিট ও ঝিনুক গুঁড়া",
+    "category": "pigeons",
+    "price": 180,
+    "originalPrice": 240,
+    "weight": "1.5 Kg",
+    "stock": 110,
+    "description": "Essential mineral grit with crushed oyster shells, charcoal, red stone clay, and digestive minerals. Promotes gizzard digestion, stops crop souring, and ensures thick eggshells.",
+    "banglaDescription": "কবুতরের হজমশক্তি বাড়ানো ও ক্যালসিয়ামের ঘাটতি মেটানোর প্রিমিয়াম লাল মাটির গ্রিট। এটি শক্ত ডিমের খোসা তৈরিতে এবং পেটের সমস্যা দূর করতে অপরিহার্য।",
+    "image": "https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.9,
+    "reviewsCount": 15,
+    "tags": [
+      "Mineral Grit",
+      "Digestive Clay",
+      "Pigeon Calcium"
+    ],
+    "featured": false,
+    "bestSeller": true,
+    "recommended": false,
+    "subcategory": "মিনারেল গ্রিট",
+    "variants": [
+      "1.5 Kg",
+      "Pack of 3 (4.5 Kg)"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "pigeon-4",
+    "name": "Australian Cleaned Wheat & Small Golden Corn Mix",
+    "banglaName": "অস্ট্রেলিয়ান বাছাইকৃত পরিষ্কার গম ও ছোট সোনালী ভুট্টা",
+    "category": "pigeons",
+    "price": 260,
+    "originalPrice": 320,
+    "weight": "2 Kg",
+    "stock": 90,
+    "description": "Double polished golden small-grain corn with imported whole wheat. Easy for young squabs and adult pigeons to swallow comfortably.",
+    "banglaDescription": "বাছাইকৃত ছোট সাইজের সোনালী ভুট্টা ও পুষ্টিকর গম। কবুতরের বাচ্চার ও বড় কবুতরের জন্য সহজে গিলে খাওয়ার উপযোগী অত্যন্ত পুষ্টিকর খাবার।",
+    "image": "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg",
+    "rating": 4.7,
+    "reviewsCount": 12,
+    "tags": [
+      "Wheat",
+      "Golden Corn",
+      "Pigeon Grains"
+    ],
+    "featured": false,
+    "bestSeller": false,
+    "recommended": true,
+    "subcategory": "গম ও বাজরা",
+    "variants": [
+      "2 Kg",
+      "5 Kg",
+      "25 Kg"
+    ],
+    "imagesGallery": [
+      "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "bird-1",
+    "name": "Taqwa Premium Seed & Nut Mix for Parrots & Budgerigars",
+    "banglaName": "তাকওয়া প্রিমিয়াম পাখির বীজ ও বাদাম মিক্স",
+    "category": "birds",
+    "price": 340,
+    "originalPrice": 420,
+    "weight": "1 Kg",
+    "stock": 85,
+    "description": "Balanced natural seed mix with rich safflower, golden millets, sunflower seeds, rolled oats, and dry fruits. Helps enhance wing color vibrant and builds rich energy reserves.",
+    "banglaDescription": "লাভবার্ড ও বাজরিগার পাখির জন্য সম্পূর্ণ প্রাকৃতিক মিশ্রিত খাবার। এতে আছে সূর্যমুখী বীজ, বাজরা, ওটস এবং ড্রাই ফ্রুটস যা পাখির ডানা উজ্জ্বল ও প্রফুল্ল রাখে।",
+    "image": "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.7,
+    "reviewsCount": 22,
+    "tags": [
+      "Bird Food",
+      "Premium Mixed",
+      "High Fiber"
+    ],
+    "featured": true,
+    "bestSeller": true,
+    "recommended": false,
+    "subcategory": "বাজরিগার মিক্স সিড",
+    "variants": [
+      "1 Kg",
+      "Pack of 2 (2 Kg)",
+      "Pack of 5 (5 Kg)"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": [
+      {
+        "id": "rev-4",
+        "userName": "Mahmudul Hasan",
+        "rating": 5,
+        "comment": "My Cockatiels love this seed mix! The packet was perfectly air-sealed.",
+        "date": "2026-06-12"
+      }
+    ]
+  },
+  {
+    "id": "bird-2",
+    "name": "Cockatiel & Lovebird Daily High-Energy Seed Blend",
+    "banglaName": "ককাটেল ও লাভবার্ড স্পেশাল হাই-এনার্জি সিড ব্লেন্ড",
+    "category": "birds",
+    "price": 420,
+    "originalPrice": 500,
+    "weight": "1 Kg",
+    "stock": 65,
+    "description": "Nutritionally enriched blend for medium parrots, cockatiels, and conures. Infused with flaxseed, canary grass, and micronutrient pellets for glossy plumage.",
+    "banglaDescription": "ককাটেল ও লাভবার্ডের উজ্জ্বল পালক ও প্রজনন ক্ষমতার জন্য বিশেষ সিড ব্লেন্ড। তিসি বীজ, ক্যানারি ঘাস দানা ও ভিটামিন পেলেটস সমৃদ্ধ।",
+    "image": "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.8,
+    "reviewsCount": 16,
+    "tags": [
+      "Cockatiel",
+      "Lovebird",
+      "Canary Seed"
+    ],
+    "featured": true,
+    "bestSeller": false,
+    "recommended": true,
+    "subcategory": "ককাটেল সিড",
+    "variants": [
+      "1 Kg",
+      "2 Kg"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "bird-3",
+    "name": "Hand-Feeding Formula for Baby Chicks & Parrots",
+    "banglaName": "পাখির বাচ্চার হ্যান্ড-ফিডিং ফর্মুলা (সেরা পুষ্টি)",
+    "category": "birds",
+    "price": 1100,
+    "originalPrice": 1300,
+    "weight": "500g",
+    "stock": 35,
+    "description": "Highly nutritious hand-rearing food for baby birds. Optimized level of fats, prebiotics, and essential digestive enzymes for rapid health gains.",
+    "banglaDescription": "পাখির বাচ্চাদের নিজের হাতে খাওয়ানোর অত্যন্ত পুষ্টিকর সুষম ফর্মুলা। এটি সহজে হজম হয় এবং পাখির সঠিক হাড় গঠনে সাহায্য করে।",
+    "image": "https://images.unsplash.com/photo-1516233593474-73708c58c58a?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.9,
+    "reviewsCount": 11,
+    "tags": [
+      "Baby Bird",
+      "Hand Feeding",
+      "Formula"
+    ],
+    "featured": false,
+    "bestSeller": true,
+    "recommended": false,
+    "subcategory": "হ্যান্ড ফিডিং ফর্মুলা",
+    "variants": [
+      "500g",
+      "1 Kg"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1516233593474-73708c58c58a?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "bird-4",
+    "name": "Taqwa Premium Cleaned Striped Sunflower Seeds",
+    "banglaName": "তাকওয়া প্রিমিয়াম পরিষ্কার সূর্যমুখী ফুলের বীজ",
+    "category": "birds",
+    "price": 280,
+    "originalPrice": 350,
+    "weight": "1 Kg",
+    "stock": 95,
+    "description": "Selected large size striped sunflower seeds, meticulously cleaned of dust. Provides healthy dietary fats and oils for energetic birds.",
+    "banglaDescription": "ধুলাবালি মুক্ত বাছাইকৃত বড় সাইজের প্রিমিয়াম সূর্যমুখী ফুলের বীজ। এটি পাখিদের প্রয়োজনীয় ফ্যাট ও এনার্জি সরবরাহ করে সক্রিয় রাখে।",
+    "image": "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.7,
+    "reviewsCount": 18,
+    "tags": [
+      "Sunflower Seeds",
+      "Bird Treats",
+      "Natural Fat"
+    ],
+    "featured": false,
+    "bestSeller": false,
+    "recommended": true,
+    "subcategory": "সূর্যমুখী বীজ",
+    "variants": [
+      "1 Kg",
+      "2.5 Kg",
+      "5 Kg"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "med-1",
+    "name": "Broad-Spectrum Pigeon & Avian Multivitamin Electrolyte Tonic",
+    "banglaName": "কবুতর ও পাখির মাল্টিভিটামিন ও ইলেকট্রোলাইট এনার্জি ড্রপ",
+    "category": "medicine",
+    "price": 380,
+    "originalPrice": 480,
+    "weight": "100 ml",
+    "stock": 60,
+    "description": "Rapid recovery multivitamin and electrolyte solution. Combats heat stress, exhaustion after flight, illness recovery, and enhances daily breeding vitality.",
+    "banglaDescription": "কবুতর ও পাখির জন্য অত্যন্ত কার্যকরী মাল্টিভিটামিন ও ইলেকট্রোলাইট সলিউশন। গরমের ধকল, অসুস্থতা ও ক্লান্তি দূর করে এবং রোগ প্রতিরোধ ক্ষমতা বৃদ্ধি করে।",
+    "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.9,
+    "reviewsCount": 24,
+    "tags": [
+      "Multivitamin",
+      "Electrolyte",
+      "Avian Health",
+      "Medicine"
+    ],
+    "featured": true,
+    "bestSeller": true,
+    "recommended": false,
+    "subcategory": "ভিটামিন ও মিনারেল",
+    "variants": [
+      "100 ml",
+      "250 ml"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "med-2",
+    "name": "Taqwa Pure Liquid Calcium & Vitamin D3 Drops",
+    "banglaName": "তাকওয়া পিওর লিকুইড ক্যালসিয়াম ও ভিটামিন ডি৩ সাপ্লিমেন্ট",
+    "category": "medicine",
+    "price": 350,
+    "originalPrice": 440,
+    "weight": "100 ml",
+    "stock": 70,
+    "description": "Liquid calcium with Vitamin D3 formulation for pet birds and pigeons. Prevents egg binding, thin egg shells, wing paralysis and bone soft diseases.",
+    "banglaDescription": "পাখি ও কবুতরের জন্য খাঁটি তরল ক্যালসিয়াম ও ভিটামিন ডি৩। ডিমের খোসা শক্ত করা, ডিম আটকে যাওয়া রোধ এবং হাড়ের দুর্বলতা দূর করতে অত্যন্ত প্রয়োজনীয়।",
+    "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.8,
+    "reviewsCount": 17,
+    "tags": [
+      "Liquid Calcium",
+      "Vitamin D3",
+      "Egg Production"
+    ],
+    "featured": false,
+    "bestSeller": true,
+    "recommended": true,
+    "subcategory": "ক্যালসিয়াম ও ইলেকট্রোলাইট",
+    "variants": [
+      "100 ml",
+      "200 ml"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "med-3",
+    "name": "Herbal Respiratory & Digestion Health Care Drops",
+    "banglaName": "হালকা ঠান্ডা ও পেটের সমস্যার হারবাল ড্রপস (সম্পূর্ণ ভেষজ)",
+    "category": "medicine",
+    "price": 290,
+    "originalPrice": 360,
+    "weight": "60 ml",
+    "stock": 45,
+    "description": "Safe natural herbal extract formulation. Clears bird respiratory tracts, soothes throat mucus, improves digestion, and protects against seasonal colds.",
+    "banglaDescription": "পাখি ও কবুতরের নাক দিয়ে পানি পড়া, কাশি, ঠান্ডা লাগা ও বদহজমে অত্যন্ত উপকারী প্রাকৃতিক ভেষজ নির্যাস ড্রপস। কোনো পার্শ্বপ্রতিক্রিয়া নেই।",
+    "image": "https://images.unsplash.com/photo-1470115636472-723602d400e6?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.7,
+    "reviewsCount": 14,
+    "tags": [
+      "Herbal Medicine",
+      "Cold Care",
+      "Respiratory Relief"
+    ],
+    "featured": true,
+    "bestSeller": false,
+    "recommended": true,
+    "subcategory": "এন্টিবায়োটিক ও ড্রপস",
+    "variants": [
+      "60 ml",
+      "120 ml"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1470115636472-723602d400e6?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "med-4",
+    "name": "Veterinary Deworming Solution for Pigeons & Aviary Birds",
+    "banglaName": "কবুতর ও শৌখিন পাখির কৃমিনাশক লিকুইড মেডিসিন",
+    "category": "medicine",
+    "price": 250,
+    "originalPrice": 320,
+    "weight": "30 ml",
+    "stock": 55,
+    "description": "Single-dose comprehensive dewormer. Clears roundworms, hairworms, and tapeworms, restoring lost body weight and bird brightness.",
+    "banglaDescription": "সব ধরনের কৃমি দূর করতে পরীক্ষিত ও নিরাপদ লিকুইড ফর্মুলা। কৃমি দূর করে কবুতর ও পাখির ওজন ও ক্ষুধা বৃদ্ধি করে।",
+    "image": "https://images.unsplash.com/photo-1628589689885-33923ef1f070?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.9,
+    "reviewsCount": 18,
+    "tags": [
+      "Dewormer",
+      "Bird Deworming",
+      "Vet Medicine"
+    ],
+    "featured": false,
+    "bestSeller": false,
+    "recommended": false,
+    "subcategory": "কৃমির ঔষধ",
+    "variants": [
+      "30 ml",
+      "60 ml"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1628589689885-33923ef1f070?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "acc-1",
+    "name": "Automatic Anti-Waste Gravity Feeder & Water Drinker Set",
+    "banglaName": "অটোমেটিক অ্যান্টি-ওয়েস্ট গ্র্যাভিটি ফিডার ও ড্রিংকার সেট",
+    "category": "accessories",
+    "price": 380,
+    "originalPrice": 480,
+    "weight": "1 Set",
+    "stock": 40,
+    "description": "Prevents feed scattering and keeps water crystal clean. Heavy-duty non-toxic acrylic construction with simple cage clip brackets.",
+    "banglaDescription": "খাবার অপচয় রোধকারী ও পানি পরিষ্কার রাখার অটোমেটিক ফিডার সেট। খাঁচার সাথে সহজে আটকে রাখা যায় এবং পাখির খাবার ছিটিয়ে ফেলা বন্ধ করে।",
+    "image": "https://images.unsplash.com/photo-1541599540903-216a46ca1ad0?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.8,
+    "reviewsCount": 20,
+    "tags": [
+      "Bird Feeder",
+      "Auto Drinker",
+      "Anti Waste"
+    ],
+    "featured": true,
+    "bestSeller": true,
+    "recommended": false,
+    "subcategory": "ফিডার ও পট",
+    "variants": [
+      "1 Set",
+      "Pack of 2 Sets"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1541599540903-216a46ca1ad0?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "acc-2",
+    "name": "Durable Plastic Pigeon Breeding Nesting Bowl with Coconut Coir Pad",
+    "banglaName": "কবুতরের ডিম পাড়ার প্লাস্টিক নেস্টিং বোল ও নারিকেল ছোবড়ার প্যাড",
+    "category": "accessories",
+    "price": 160,
+    "originalPrice": 220,
+    "weight": "1 Pcs",
+    "stock": 120,
+    "description": "Ergonomic breeding bowl with natural coconut fiber liner. Keeps eggs warm, prevents rolling and provides safe support for newly hatched squabs.",
+    "banglaDescription": "কবুতরের ডিম পাড়ার আরামদায়ক প্লাস্টিক বোল ও গরম ছোবড়ার প্যাড। ডিম ভাঙা বা গড়িয়ে যাওয়া প্রতিরোধ করে এবং বাচ্চার যত্ন নেয়।",
+    "image": "https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.9,
+    "reviewsCount": 35,
+    "tags": [
+      "Nesting Bowl",
+      "Pigeon Breeding",
+      "Egg Care"
+    ],
+    "featured": false,
+    "bestSeller": true,
+    "recommended": true,
+    "subcategory": "নেস্টিং বাটি",
+    "variants": [
+      "1 Pcs",
+      "Pack of 5 Pcs",
+      "Pack of 10 Pcs"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "acc-3",
+    "name": "Stainless Steel Hanging Dual-Cup Food & Water Tray for Cages",
+    "banglaName": "স্টেইনলেস স্টিল ঝুলন্ত ডাবল বাটি খাবার ও পানির পট",
+    "category": "accessories",
+    "price": 320,
+    "originalPrice": 400,
+    "weight": "1 Pcs",
+    "stock": 50,
+    "description": "Rust-proof hygienic stainless steel dual pots. Easily mounts to any wire cage without wobbling or tilting.",
+    "banglaDescription": "মরিচারোধক টেকসই স্টেইনলেস স্টিল বাটি যা খাঁচায় সহজে আটকানো যায়। পাখি বা কবুতর সহজে উল্টাতে পারে না।",
+    "image": "https://images.unsplash.com/photo-1504198266287-1659872e6590?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.7,
+    "reviewsCount": 15,
+    "tags": [
+      "Steel Pot",
+      "Cage Accessories",
+      "Hanging Cup"
+    ],
+    "featured": true,
+    "bestSeller": false,
+    "recommended": true,
+    "subcategory": "খাঁচা ও ট্রে",
+    "variants": [
+      "1 Pcs",
+      "Pack of 2"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1504198266287-1659872e6590?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  },
+  {
+    "id": "acc-4",
+    "name": "Precision Avian & Pigeon Beak & Claw Trimmer with Safety Guard",
+    "banglaName": "পাখি ও কবুতরের নখ ও ঠোঁট কাটার প্রেসিশন কাটার (সেফটি গার্ডসহ)",
+    "category": "accessories",
+    "price": 240,
+    "originalPrice": 300,
+    "weight": "1 Pcs",
+    "stock": 60,
+    "description": "Ultra-sharp surgical steel cutting edges designed specifically for avian claws and beaks without pinching or splitting nails.",
+    "banglaDescription": "পাখি ও কবুতরের নখ ও ঠোঁটের বাড়তি অংশ নিখুঁত ও নিরাপদে ছাঁটার জন্য বিশেষ কাটার। রক্তক্ষরণ ছাড়া আরামদায়ক গ্রুমিং নিশ্চিত করে।",
+    "image": "https://images.unsplash.com/photo-1541599540903-216a46ca1ad0?auto=format&fit=crop&q=80&w=600",
+    "rating": 4.6,
+    "reviewsCount": 8,
+    "tags": [
+      "Nail Trimmer",
+      "Beak Trimmer",
+      "Avian Grooming"
+    ],
+    "featured": false,
+    "bestSeller": false,
+    "recommended": false,
+    "subcategory": "গ্রুমিং ও রিং",
+    "variants": [
+      "1 Pcs"
+    ],
+    "imagesGallery": [
+      "https://images.unsplash.com/photo-1541599540903-216a46ca1ad0?auto=format&fit=crop&q=80&w=600"
+    ],
+    "reviews": []
+  }
+]

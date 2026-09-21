@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, User as UserIcon, MapPin, Bell, Trash2, Edit2, Check, Plus, ClipboardCheck, 
   Mail, Phone, Calendar, Info, Shield, Award, Sparkles, Home, Briefcase, 
-  CreditCard, ChevronRight, Upload, BellRing, Ticket, Copy
+  CreditCard, ChevronRight, Upload, BellRing, Ticket, Copy, Loader2
 } from 'lucide-react';
 import { User, Address, StoreNotification } from '../types';
+import { uploadImage } from '../lib/cloudinary';
 
 interface ProfileModalProps {
   user: User;
@@ -45,6 +46,32 @@ export default function ProfileModal({
   const [selectedAvatar, setSelectedAvatar] = useState(user.avatar || AVATAR_PRESETS[0]);
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [profileSuccessMessage, setProfileSuccessMessage] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarProgress, setAvatarProgress] = useState<number | null>(null);
+
+  const handleCustomAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setAvatarProgress(0);
+    try {
+      const url = await uploadImage(file, {
+        folder: 'taqwa_enterprise/avatars',
+        onProgress: (percent) => setAvatarProgress(percent),
+        compress: true
+      });
+      setSelectedAvatar(url);
+      await onUpdateUser({ avatar: url });
+      setProfileSuccessMessage(isBn ? 'ছবি সফলভাবে ক্লাউডে আপলোড ও সেভ হয়েছে!' : 'Avatar uploaded to Cloudinary successfully!');
+      setTimeout(() => setProfileSuccessMessage(''), 4000);
+    } catch (err: any) {
+      alert(isBn ? `ছবি আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Upload failed: ${err.message}`);
+    } finally {
+      setUploadingAvatar(false);
+      setAvatarProgress(null);
+    }
+  };
 
   // Address Desk Form State
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -230,9 +257,27 @@ export default function ProfileModal({
 
                 {/* Avatar Preset deck selector */}
                 <div className="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                  <label className="block text-[10px] font-black text-slate-550 uppercase tracking-wider pl-0.5">
-                    {isBn ? 'প্রোফাইল ছবি নির্বাচন করুন' : 'Select Avatar Preset Image'}
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-black text-slate-550 uppercase tracking-wider pl-0.5">
+                      {isBn ? 'প্রোফাইল ছবি নির্বাচন বা আপলোড' : 'Select or Upload Profile Picture'}
+                    </label>
+                    <label className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+                      {uploadingAvatar ? (
+                        <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                      ) : (
+                        <Upload className="w-3 h-3" />
+                      )}
+                      <span>{uploadingAvatar ? `${avatarProgress || 0}%` : (isBn ? 'গ্যালারি থেকে ছবি আপলোড' : 'Upload Image')}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleCustomAvatarUpload}
+                        disabled={uploadingAvatar}
+                      />
+                    </label>
+                  </div>
+
                   <div className="flex flex-wrap gap-2.5 items-center">
                     <div className="w-14 h-14 rounded-full overflow-hidden border-3 border-emerald-500 bg-white flex items-center justify-center mr-2 shadow-sm shrink-0">
                       <img

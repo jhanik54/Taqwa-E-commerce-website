@@ -1,0 +1,71 @@
+[
+  {
+    "id": "ord-1001",
+    "trackingId": "TQW-78326-DH",
+    "orderNumber": "TQW-78326",
+    "customerName": "Mohammad Fahim",
+    "customerPhone": "01712345678",
+    "customerEmail": "fahim@example.com",
+    "shippingAddress": "House 24, Road 4, Dhanmondi, Dhaka",
+    "district": "Dhaka",
+    "items": [
+      {
+        "productId": "cat-1",
+        "productName": "Premium Kitten Dry Food - High Protein Chicken & Salmon",
+        "quantity": 1,
+        "price": 1350,
+        "image": "https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&q=80&w=600"
+      }
+    ],
+    "subtotal": 1350,
+    "deliveryCharge": 60,
+    "totalAmount": 1410,
+    "paymentMethod": "bKash",
+    "paymentStatus": "Paid",
+    "paymentTransactionId": "BK78G90R3Q",
+    "orderStatus": "Processing",
+    "courier": "Steadfast",
+    "courierConsignmentId": "ST-892182",
+    "createdAt": "2026-09-11T13:31:54.434Z"
+  },
+  {
+    "id": "ord-19518142",
+    "trackingId": "TQW-19518-JN",
+    "orderNumber": "TQW-19518",
+    "customerName": "Abdur Rahamn",
+    "customerPhone": "01724791612",
+    "customerEmail": "abdur.rahamn@gmail.com",
+    "shippingAddress": "Laksam, Comilla",
+    "district": "Comilla",
+    "items": [
+      {
+        "productId": "bird-feed-1",
+        "productName": "1 Bosta Feed (25kg Pigeon / Bird Feed)",
+        "quantity": 1,
+        "price": 2820,
+        "image": "/uploads/tqw_1789295462226_r3t7o_1000008385_jpg.jpg"
+      }
+    ],
+    "subtotal": 2820,
+    "deliveryCharge": 160,
+    "conditionCharge": 30,
+    "totalAmount": 3010,
+    "paymentMethod": "Cash on Delivery (Condition)",
+    "paymentStatus": "Pending",
+    "orderStatus": "Shipped",
+    "courier": "Janani",
+    "courierConsignmentId": "19518142",
+    "consignmentId": "19518142",
+    "placeOfBooking": "Konabari",
+    "bookingDateStr": "01-9-2026, 12:23 pm",
+    "senderName": "Abdul Malek Molla",
+    "senderPhone": "01682867316",
+    "senderAddress": "Konabari",
+    "destinationBranch": "Laksam",
+    "deliveryType": "O/D",
+    "bookingOfficer": "Md. Rakib",
+    "amountInWords": "three thousand and ten",
+    "weightKg": 25,
+    "createdAt": "2026-09-01T12:23:00Z"
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "pigeons",
+    "name": "Pigeon Feed",
+    "banglaName": "কবুতরের খাবার",
+    "image": "https://images.unsplash.com/photo-1522858547137-f1dcec554f55?auto=format&fit=crop&q=80&w=400",
+    "status": "Active",
+    "order": 1,
+    "subcategories": [
+      "মিক্সড দানা",
+      "গম ও বাজরা",
+      "রেসিং সিড মিক্স",
+      "মিনারেল গ্রিট"
+    ]
+  },
+  {
+    "id": "birds",
+    "name": "Bird Feed",
+    "banglaName": "পাখির খাবার",
+    "image": "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=300",
+    "status": "Active",
+    "order": 2,
+    "subcategories": [
+      "বাজরিগার মিক্স সিড",
+      "ককাটেল সিড",
+      "সূর্যমুখী বীজ",
+      "হ্যান্ড ফিডিং ফর্মুলা"
+    ]
+  },
+  {
+    "id": "medicine",
+    "name": "Medicine",
+    "banglaName": "ঔষধ",
+    "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=300",
+    "status": "Active",
+    "order": 3,
+    "subcategories": [
+      "ভিটামিন ও মিনারেল",
+      "এন্টিবায়োটিক ও ড্রপস",
+      "কৃমির ঔষধ",
+      "ক্যালসিয়াম ও ইলেকট্রোলাইট"
+    ]
+  },
+  {
+    "id": "accessories",
+    "name": "Accessories",
+    "banglaName": "এক্সেসরিজ",
+    "image": "https://images.unsplash.com/photo-1541599540903-216a46ca1ad0?auto=format&fit=crop&q=80&w=300",
+    "status": "Active",
+    "order": 4,
+    "subcategories": [
+      "খাঁচা ও ট্রে",
+      "ফিডার ও পট",
+      "নেস্টিং বাটি",
+      "গ্রুমিং ও রিং"
+    ]
+  }
+]

@@ -83,7 +83,7 @@ export default function LiveChat({ lang, onSendMessage }: LiveChatProps) {
       ];
 
   return (
-    <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50 flex flex-col items-end" id="support-live-chat-bubble">
+    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex flex-col items-end" id="support-live-chat-bubble">
       
       {/* 1. Floating round bubble - 40% more compact, subtle float animation */}
       {!isOpen && (

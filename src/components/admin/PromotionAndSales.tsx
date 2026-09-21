@@ -14,6 +14,7 @@ import {
   Flame 
 } from 'lucide-react';
 import { Coupon, Banner, FlashSale, Product } from '../../types';
+import { uploadImage } from '../../lib/cloudinary';
 
 interface PromotionAndSalesProps {
   coupons: Coupon[];
@@ -81,8 +82,6 @@ export default function PromotionAndSales({
       setBannerStatus(isBn ? 'চিত্র সংকুচিত করা হচ্ছে...' : 'Compressing image...');
 
       try {
-        const { uploadImage } = await import('../../lib/cloudinary');
-        
         const url = await uploadImage(file, {
           onProgress: (percent) => {
             setBannerProgress(percent);
