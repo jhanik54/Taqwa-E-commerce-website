@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bell, 
   Settings, 
@@ -26,7 +26,10 @@ import {
   Trash2,
   Database,
   Server,
-  HardDrive
+  HardDrive,
+  Upload,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { StoreSettings, ActivityLog, Order, Product } from '../../types';
 import { getCloudinaryConfig, saveCloudinaryConfig, testCloudinaryConnection, uploadImage } from '../../lib/cloudinary';
@@ -295,64 +298,57 @@ export default function NotificationAndSettings({
     }
   };
 
-  // Logo & Favicon Upload States & Handlers
+  // Logo & Favicon Upload States, Refs & Handlers
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
+  const faviconFileInputRef = useRef<HTMLInputElement>(null);
+
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoProgress, setLogoProgress] = useState<number | null>(null);
   const [faviconUploading, setFaviconUploading] = useState(false);
   const [faviconProgress, setFaviconProgress] = useState<number | null>(null);
 
+  const processLogoFile = async (file: File) => {
+    if (!file) return;
+    setLogoUploading(true);
+    setLogoProgress(0);
+    try {
+      const url = await uploadImage(file, {
+        onProgress: (percent) => setLogoProgress(percent),
+        compress: true
+      });
+      setLogo(url);
+    } catch (err: any) {
+      alert(isBn ? `লোগো আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Logo upload failed: ${err.message}`);
+    } finally {
+      setLogoUploading(false);
+      setLogoProgress(null);
+    }
+  };
+
+  const processFaviconFile = async (file: File) => {
+    if (!file) return;
+    setFaviconUploading(true);
+    setFaviconProgress(0);
+    try {
+      const url = await uploadImage(file, {
+        onProgress: (percent) => setFaviconProgress(percent),
+        compress: true
+      });
+      setFavicon(url);
+    } catch (err: any) {
+      alert(isBn ? `ফেভিকন আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Favicon upload failed: ${err.message}`);
+    } finally {
+      setFaviconUploading(false);
+      setFaviconProgress(null);
+    }
+  };
+
   const handleLogoUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      setLogoUploading(true);
-      setLogoProgress(0);
-
-      try {
-        const url = await uploadImage(file, {
-          onProgress: (percent) => setLogoProgress(percent),
-          compress: true
-        });
-        setLogo(url);
-      } catch (err: any) {
-        alert(isBn ? `লোগো আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Logo upload failed: ${err.message}`);
-      } finally {
-        setLogoUploading(false);
-        setLogoProgress(null);
-      }
-    };
-    input.click();
+    logoFileInputRef.current?.click();
   };
 
   const handleFaviconUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      setFaviconUploading(true);
-      setFaviconProgress(0);
-
-      try {
-        const url = await uploadImage(file, {
-          onProgress: (percent) => setFaviconProgress(percent),
-          compress: true
-        });
-        setFavicon(url);
-      } catch (err: any) {
-        alert(isBn ? `ফেভিকন আপলোড ব্যর্থ হয়েছে: ${err.message}` : `Favicon upload failed: ${err.message}`);
-      } finally {
-        setFaviconUploading(false);
-        setFaviconProgress(null);
-      }
-    };
-    input.click();
+    faviconFileInputRef.current?.click();
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -622,47 +618,173 @@ export default function NotificationAndSettings({
                 </div>
               </div>
 
-              {/* Logo and Favicon Configuration with Live Previews & Upload Helpers */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/50">
-                <div className="space-y-1">
-                  <label>{isBn ? 'স্টোর লোগো রিসোর্স URL (Logo)' : 'Store Logo URL'}</label>
-                  <div className="flex gap-2">
-                    <input type="text" value={logo} onChange={(e) => setLogo(e.target.value)} className="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl font-mono text-[10px]" placeholder="https://..." />
-                    <button
-                      type="button"
-                      onClick={handleLogoUpload}
-                      disabled={logoUploading}
-                      className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-300 rounded-xl flex items-center justify-center gap-1 text-[10px] cursor-pointer"
-                    >
-                      {logoUploading ? <span>{logoProgress}%</span> : <span>Upload</span>}
-                    </button>
+              {/* Logo and Favicon Configuration with Dedicated File Pickers & Image Previews */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-200/50">
+                
+                {/* Store Logo Section */}
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-emerald-600" />
+                      <span>{isBn ? 'স্টোর লোগো (Store Logo)' : 'Store Logo'}</span>
+                    </label>
+                    {logo && (
+                      <button
+                        type="button"
+                        onClick={() => setLogo('')}
+                        className="text-[10px] text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>{isBn ? 'মুছে ফেলুন' : 'Remove'}</span>
+                      </button>
+                    )}
                   </div>
-                  {logo && (
-                    <div className="mt-2 p-2 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 h-16 overflow-hidden">
-                      <img src={logo} alt="Logo Preview" className="max-h-12 max-w-full object-contain" referrerPolicy="no-referrer" />
+
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    ref={logoFileInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) processLogoFile(file);
+                    }}
+                  />
+
+                  {/* Primary Upload Button */}
+                  <button
+                    type="button"
+                    onClick={() => logoFileInputRef.current?.click()}
+                    disabled={logoUploading}
+                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
+                  >
+                    {logoUploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>{isBn ? `আপলোড হচ্ছে: ${logoProgress || 0}%` : `Uploading: ${logoProgress || 0}%`}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>{isBn ? 'ডিভাইস / গ্যালারি থেকে লোগো ছবি বেছে নিন' : 'Upload Logo Image from Device'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Live Preview Card */}
+                  {logo ? (
+                    <div className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center space-y-1">
+                      <div className="h-16 flex items-center justify-center overflow-hidden">
+                        <img src={logo} alt="Logo Preview" className="max-h-14 max-w-full object-contain" referrerPolicy="no-referrer" />
+                      </div>
+                      <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
+                        {isBn ? 'লোগো সক্রিয় আছে' : 'Active Store Logo'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-100/60 rounded-xl border border-dashed border-slate-300 text-center text-slate-400 text-[10px]">
+                      {isBn ? 'কোন লোগো ছবি আপলোড করা নেই' : 'No Logo Uploaded Yet'}
                     </div>
                   )}
+
+                  {/* Direct URL Input Fallback */}
+                  <div className="pt-2 border-t border-slate-200/60">
+                    <label className="text-[10px] text-slate-500 font-bold block mb-1">
+                      {isBn ? 'অথবা সরাসরি লোগো URL দিন:' : 'Or enter direct Logo URL:'}
+                    </label>
+                    <input
+                      type="text"
+                      value={logo}
+                      onChange={(e) => setLogo(e.target.value)}
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg font-mono text-[10px]"
+                      placeholder="https://..."
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label>{isBn ? 'স্টোর ফেভিকন URL (Favicon)' : 'Store Favicon URL'}</label>
-                  <div className="flex gap-2">
-                    <input type="text" value={favicon} onChange={(e) => setFavicon(e.target.value)} className="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl font-mono text-[10px]" placeholder="https://..." />
-                    <button
-                      type="button"
-                      onClick={handleFaviconUpload}
-                      disabled={faviconUploading}
-                      className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-300 rounded-xl flex items-center justify-center gap-1 text-[10px] cursor-pointer"
-                    >
-                      {faviconUploading ? <span>{faviconProgress}%</span> : <span>Upload</span>}
-                    </button>
+                {/* Store Favicon Section */}
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-emerald-600" />
+                      <span>{isBn ? 'স্টোর ফেভিকন (Store Favicon)' : 'Store Favicon'}</span>
+                    </label>
+                    {favicon && (
+                      <button
+                        type="button"
+                        onClick={() => setFavicon('')}
+                        className="text-[10px] text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>{isBn ? 'মুছে ফেলুন' : 'Remove'}</span>
+                      </button>
+                    )}
                   </div>
-                  {favicon && (
-                    <div className="mt-2 p-2 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 h-16 overflow-hidden">
-                      <img src={favicon} alt="Favicon Preview" className="max-h-12 max-w-full object-contain" referrerPolicy="no-referrer" />
+
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    ref={faviconFileInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) processFaviconFile(file);
+                    }}
+                  />
+
+                  {/* Primary Upload Button */}
+                  <button
+                    type="button"
+                    onClick={() => faviconFileInputRef.current?.click()}
+                    disabled={faviconUploading}
+                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
+                  >
+                    {faviconUploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>{isBn ? `আপলোড হচ্ছে: ${faviconProgress || 0}%` : `Uploading: ${faviconProgress || 0}%`}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>{isBn ? 'ডিভাইস / গ্যালারি থেকে ফেভিকন ছবি বেছে নিন' : 'Upload Favicon Image from Device'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Live Preview Card */}
+                  {favicon ? (
+                    <div className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center space-y-1">
+                      <div className="h-12 w-12 flex items-center justify-center overflow-hidden bg-slate-50 rounded-lg p-1 border border-slate-100">
+                        <img src={favicon} alt="Favicon Preview" className="max-h-10 max-w-full object-contain" referrerPolicy="no-referrer" />
+                      </div>
+                      <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
+                        {isBn ? 'ফেভিকন সক্রিয় আছে' : 'Active Browser Icon'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-100/60 rounded-xl border border-dashed border-slate-300 text-center text-slate-400 text-[10px]">
+                      {isBn ? 'কোন ফেভিকন ছবি আপলোড করা হয়নি' : 'No Favicon Uploaded Yet'}
                     </div>
                   )}
+
+                  {/* Direct URL Input Fallback */}
+                  <div className="pt-2 border-t border-slate-200/60">
+                    <label className="text-[10px] text-slate-500 font-bold block mb-1">
+                      {isBn ? 'অথবা সরাসরি ফেভিকন URL দিন:' : 'Or enter direct Favicon URL:'}
+                    </label>
+                    <input
+                      type="text"
+                      value={favicon}
+                      onChange={(e) => setFavicon(e.target.value)}
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg font-mono text-[10px]"
+                      placeholder="https://..."
+                    />
+                  </div>
                 </div>
+
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/50">

@@ -292,6 +292,163 @@ async function createSchema() {
       public_url VARCHAR(512) NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_filename (filename)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 8. Courier Parcels & Consignment Bookings (Dedicated Courier Ledger & CN records)
+    `CREATE TABLE IF NOT EXISTS courier_parcels (
+      id VARCHAR(64) PRIMARY KEY,
+      order_id VARCHAR(64) DEFAULT NULL,
+      tracking_id VARCHAR(64) DEFAULT NULL,
+      consignment_id VARCHAR(64) DEFAULT NULL,
+      cn_number VARCHAR(64) DEFAULT NULL,
+      courier VARCHAR(64) NOT NULL DEFAULT 'Janani',
+      delivery_type VARCHAR(64) DEFAULT 'O/D',
+      customer_name VARCHAR(255) NOT NULL,
+      customer_phone VARCHAR(32) NOT NULL,
+      customer_alt_phone VARCHAR(32) DEFAULT NULL,
+      shipping_address TEXT NOT NULL,
+      district VARCHAR(64) NOT NULL,
+      destination_branch VARCHAR(128) DEFAULT NULL,
+      sender_name VARCHAR(255) DEFAULT 'Abdul Malek Molla',
+      sender_phone VARCHAR(32) DEFAULT '01718-105642',
+      sender_address TEXT DEFAULT NULL,
+      place_of_booking VARCHAR(128) DEFAULT 'Konabari',
+      booking_officer VARCHAR(128) DEFAULT 'Md. Rakib',
+      booking_date_str VARCHAR(128) DEFAULT NULL,
+      items_summary TEXT DEFAULT NULL,
+      product_quantity INT DEFAULT 1,
+      package_type VARCHAR(64) DEFAULT 'ব্যাগ/বস্তা',
+      weight_kg DECIMAL(8, 2) DEFAULT 1.0,
+      special_instructions TEXT DEFAULT NULL,
+      condition_amount DECIMAL(10, 2) DEFAULT 0,
+      condition_charge DECIMAL(10, 2) DEFAULT 0,
+      condition_charge_type VARCHAR(32) DEFAULT 'To-Pay',
+      carrying_charge DECIMAL(10, 2) DEFAULT 0,
+      carrying_charge_type VARCHAR(32) DEFAULT 'To-Pay',
+      vat DECIMAL(10, 2) DEFAULT 0,
+      amount_in_words VARCHAR(255) DEFAULT NULL,
+      cod_amount DECIMAL(10, 2) DEFAULT 0,
+      cod_fee DECIMAL(10, 2) DEFAULT 0,
+      delivery_charge DECIMAL(10, 2) DEFAULT 0,
+      total_payable_by_courier DECIMAL(10, 2) DEFAULT 0,
+      status VARCHAR(64) NOT NULL DEFAULT 'In Transit',
+      settlement_status VARCHAR(64) NOT NULL DEFAULT 'Unsettled',
+      tracking_url VARCHAR(512) DEFAULT NULL,
+      notes TEXT DEFAULT NULL,
+      booked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_consignment (consignment_id),
+      INDEX idx_tracking (tracking_id),
+      INDEX idx_customer_phone (customer_phone),
+      INDEX idx_courier (courier),
+      INDEX idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 9. Courier Service Configurations & Merchant API Credentials
+    `CREATE TABLE IF NOT EXISTS courier_settings (
+      id VARCHAR(32) PRIMARY KEY DEFAULT 'primary',
+      default_courier VARCHAR(64) DEFAULT 'Steadfast',
+      auto_update_order_status BOOLEAN DEFAULT TRUE,
+      send_customer_sms BOOLEAN DEFAULT TRUE,
+      sender_name VARCHAR(255) DEFAULT 'Taqwa Enterprise',
+      sender_phone VARCHAR(32) DEFAULT '01913955452',
+      sender_address TEXT DEFAULT NULL,
+      sender_district VARCHAR(64) DEFAULT 'Dhaka',
+      config_json LONGTEXT DEFAULT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 10. General System & Shop Settings
+    `CREATE TABLE IF NOT EXISTS system_settings (
+      id VARCHAR(32) PRIMARY KEY DEFAULT 'primary',
+      settings_json LONGTEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 11. Discount Coupons & Promo Codes
+    `CREATE TABLE IF NOT EXISTS coupons (
+      code VARCHAR(64) PRIMARY KEY,
+      discount_percent INT DEFAULT 0,
+      discount_amount DECIMAL(10, 2) DEFAULT 0,
+      min_order_amount DECIMAL(10, 2) DEFAULT 0,
+      is_active BOOLEAN DEFAULT TRUE,
+      expires_at DATETIME DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 12. Product Categories
+    `CREATE TABLE IF NOT EXISTS categories (
+      id VARCHAR(64) PRIMARY KEY,
+      name VARCHAR(128) NOT NULL,
+      bangla_name VARCHAR(128) DEFAULT NULL,
+      icon VARCHAR(64) DEFAULT NULL,
+      image VARCHAR(512) DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 13. Suppliers & Vendors
+    `CREATE TABLE IF NOT EXISTS suppliers (
+      id VARCHAR(64) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      phone VARCHAR(32) DEFAULT NULL,
+      email VARCHAR(191) DEFAULT NULL,
+      address TEXT DEFAULT NULL,
+      company VARCHAR(255) DEFAULT NULL,
+      balance DECIMAL(10, 2) DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 14. Stock Purchases
+    `CREATE TABLE IF NOT EXISTS purchases (
+      id VARCHAR(64) PRIMARY KEY,
+      invoice_no VARCHAR(64) DEFAULT NULL,
+      supplier_id VARCHAR(64) DEFAULT NULL,
+      supplier_name VARCHAR(255) DEFAULT NULL,
+      total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+      paid_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+      due_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+      items_json LONGTEXT DEFAULT NULL,
+      purchase_date DATE DEFAULT NULL,
+      notes TEXT DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 15. Inventory Movement Logs
+    `CREATE TABLE IF NOT EXISTS inventory_logs (
+      id VARCHAR(64) PRIMARY KEY,
+      product_id VARCHAR(64) NOT NULL,
+      product_name VARCHAR(255) DEFAULT NULL,
+      change_type VARCHAR(64) NOT NULL,
+      quantity INT NOT NULL,
+      previous_stock INT NOT NULL DEFAULT 0,
+      new_stock INT NOT NULL DEFAULT 0,
+      reference VARCHAR(255) DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 16. Damaged / Returned Goods
+    `CREATE TABLE IF NOT EXISTS damages (
+      id VARCHAR(64) PRIMARY KEY,
+      product_id VARCHAR(64) NOT NULL,
+      product_name VARCHAR(255) DEFAULT NULL,
+      quantity INT NOT NULL,
+      cost_loss DECIMAL(10, 2) NOT NULL DEFAULT 0,
+      reason TEXT DEFAULT NULL,
+      damage_date DATE DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 17. Accounting & Cash/Bank Transactions
+    `CREATE TABLE IF NOT EXISTS accounts_transactions (
+      id VARCHAR(64) PRIMARY KEY,
+      type VARCHAR(32) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      category VARCHAR(64) DEFAULT NULL,
+      amount DECIMAL(10, 2) NOT NULL,
+      account_type VARCHAR(64) DEFAULT 'cash',
+      transaction_date DATE NOT NULL,
+      notes TEXT DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   ];
 
@@ -306,9 +463,30 @@ async function createSchema() {
   // Ensure loyalty_points column is present in users table if table already existed
   try {
     await pool.query("ALTER TABLE users ADD COLUMN loyalty_points INT NOT NULL DEFAULT 0;");
-    console.log("[MYSQL] Added 'loyalty_points' column to users table.");
   } catch (err: any) {
     // Already exists
+  }
+
+  // Ensure courier booking columns exist in orders table
+  const orderColumns = [
+    "ALTER TABLE orders ADD COLUMN consignment_id VARCHAR(64) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN place_of_booking VARCHAR(128) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN booking_date_str VARCHAR(128) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN booking_officer VARCHAR(128) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN sender_name VARCHAR(255) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN sender_phone VARCHAR(32) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN destination_branch VARCHAR(128) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN delivery_type VARCHAR(64) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN weight_kg DECIMAL(8, 2) DEFAULT NULL;",
+    "ALTER TABLE orders ADD COLUMN condition_charge DECIMAL(10, 2) DEFAULT 0;",
+    "ALTER TABLE orders ADD COLUMN amount_in_words VARCHAR(255) DEFAULT NULL;"
+  ];
+  for (const colQuery of orderColumns) {
+    try {
+      await pool.query(colQuery);
+    } catch (e) {
+      // Column already exists, safe to ignore
+    }
   }
 
   console.log("[MYSQL] ✅ All database tables created or verified successfully!");
@@ -514,11 +692,19 @@ export async function saveOrderToDb(order: any): Promise<boolean> {
         id, tracking_id, customer_name, customer_email, customer_phone, delivery_address,
         district, courier_point_id, courier_name, total_amount, delivery_charge,
         discount_amount, coupon_code, payment_method, payment_status, payment_trx_id,
-        status, notes, invoice_number
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        status, notes, invoice_number, consignment_id, place_of_booking,
+        booking_date_str, booking_officer, sender_name, sender_phone,
+        destination_branch, delivery_type, weight_kg, condition_charge, amount_in_words
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE 
         status=VALUES(status), payment_status=VALUES(payment_status), 
-        payment_trx_id=VALUES(payment_trx_id)`,
+        payment_trx_id=VALUES(payment_trx_id),
+        consignment_id=VALUES(consignment_id),
+        courier_name=VALUES(courier_name),
+        place_of_booking=VALUES(place_of_booking),
+        booking_date_str=VALUES(booking_date_str),
+        booking_officer=VALUES(booking_officer),
+        destination_branch=VALUES(destination_branch)`,
       [
         order.id,
         order.trackingId || order.id,
@@ -528,7 +714,7 @@ export async function saveOrderToDb(order: any): Promise<boolean> {
         order.deliveryAddress || `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}`,
         order.district || order.shippingAddress?.city || 'Dhaka',
         order.courierPointId || null,
-        order.courierName || null,
+        order.courierName || order.courier || null,
         order.totalAmount || order.total || 0,
         order.deliveryCharge || 0,
         order.discountAmount || 0,
@@ -538,7 +724,18 @@ export async function saveOrderToDb(order: any): Promise<boolean> {
         order.paymentTrxId || null,
         order.status || 'pending',
         order.notes || null,
-        order.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`
+        order.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+        order.consignmentId || order.courierConsignmentId || null,
+        order.placeOfBooking || null,
+        order.bookingDateStr || null,
+        order.bookingOfficer || null,
+        order.senderName || null,
+        order.senderPhone || null,
+        order.destinationBranch || null,
+        order.deliveryType || null,
+        order.weightKg || null,
+        order.conditionCharge || 0,
+        order.amountInWords || null
       ]
     );
 
@@ -604,6 +801,223 @@ export async function recordUploadedFile(fileInfo: {
   }
 }
 
+// ----------------------------------------------------
+// COURIER BOOKING & LOGISTICS DB HELPERS
+// ----------------------------------------------------
+
+export async function fetchCourierParcelsFromDb(): Promise<any[] | null> {
+  if (!isMySqlConnected()) return null;
+  try {
+    const [rows]: any = await pool!.query("SELECT * FROM courier_parcels ORDER BY booked_at DESC");
+    return rows.map((r: any) => ({
+      id: r.id,
+      orderId: r.order_id,
+      trackingId: r.tracking_id,
+      consignmentId: r.consignment_id,
+      cnNumber: r.cn_number || r.consignment_id,
+      courier: r.courier,
+      deliveryType: r.delivery_type,
+      customerName: r.customer_name,
+      customerPhone: r.customer_phone,
+      customerAltPhone: r.customer_alt_phone,
+      shippingAddress: r.shipping_address,
+      district: r.district,
+      destinationBranch: r.destination_branch,
+      senderName: r.sender_name,
+      senderPhone: r.sender_phone,
+      senderAddress: r.sender_address,
+      placeOfBooking: r.place_of_booking,
+      bookingOfficer: r.booking_officer,
+      bookingDateStr: r.booking_date_str,
+      itemsSummary: r.items_summary,
+      productQuantity: Number(r.product_quantity) || 1,
+      packageType: r.package_type,
+      weightKg: Number(r.weight_kg) || 1,
+      specialInstructions: r.special_instructions,
+      conditionAmount: Number(r.condition_amount) || 0,
+      conditionCharge: Number(r.condition_charge) || 0,
+      conditionChargeType: r.condition_charge_type || 'To-Pay',
+      carryingCharge: Number(r.carrying_charge) || 0,
+      carryingChargeType: r.carrying_charge_type || 'To-Pay',
+      vat: Number(r.vat) || 0,
+      amountInWords: r.amount_in_words,
+      codAmount: Number(r.cod_amount) || 0,
+      codFee: Number(r.cod_fee) || 0,
+      deliveryCharge: Number(r.delivery_charge) || 0,
+      totalPayableByCourier: Number(r.total_payable_by_courier) || 0,
+      status: r.status,
+      settlementStatus: r.settlement_status,
+      trackingUrl: r.tracking_url,
+      notes: r.notes,
+      bookedAt: r.booked_at ? new Date(r.booked_at).toISOString() : new Date().toISOString(),
+      lastUpdated: r.last_updated ? new Date(r.last_updated).toISOString() : new Date().toISOString()
+    }));
+  } catch (err: any) {
+    console.error("[MYSQL] Error fetching courier parcels:", err.message);
+    return null;
+  }
+}
+
+export async function saveCourierParcelToDb(p: any): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query(
+      `INSERT INTO courier_parcels (
+        id, order_id, tracking_id, consignment_id, cn_number, courier, delivery_type,
+        customer_name, customer_phone, customer_alt_phone, shipping_address, district,
+        destination_branch, sender_name, sender_phone, sender_address, place_of_booking,
+        booking_officer, booking_date_str, items_summary, product_quantity, package_type,
+        weight_kg, special_instructions, condition_amount, condition_charge, condition_charge_type,
+        carrying_charge, carrying_charge_type, vat, amount_in_words, cod_amount, cod_fee,
+        delivery_charge, total_payable_by_courier, status, settlement_status, tracking_url,
+        notes, booked_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
+        status=VALUES(status),
+        settlement_status=VALUES(settlement_status),
+        consignment_id=VALUES(consignment_id),
+        cn_number=VALUES(cn_number),
+        tracking_url=VALUES(tracking_url),
+        last_updated=CURRENT_TIMESTAMP`,
+      [
+        p.id,
+        p.orderId || null,
+        p.trackingId || null,
+        p.consignmentId || p.cnNumber || null,
+        p.cnNumber || p.consignmentId || null,
+        p.courier || 'Janani',
+        p.deliveryType || 'O/D',
+        p.customerName || 'Valued Customer',
+        p.customerPhone || '',
+        p.customerAltPhone || null,
+        p.shippingAddress || '',
+        p.district || 'Dhaka',
+        p.destinationBranch || null,
+        p.senderName || 'Abdul Malek Molla',
+        p.senderPhone || '01718-105642',
+        p.senderAddress || null,
+        p.placeOfBooking || 'Konabari',
+        p.bookingOfficer || 'Md. Rakib',
+        p.bookingDateStr || null,
+        p.itemsSummary || null,
+        p.productQuantity || 1,
+        p.packageType || 'ব্যাগ/বস্তা',
+        p.weightKg || 1,
+        p.specialInstructions || null,
+        p.conditionAmount || 0,
+        p.conditionCharge || 0,
+        p.conditionChargeType || 'To-Pay',
+        p.carryingCharge || 0,
+        p.carryingChargeType || 'To-Pay',
+        p.vat || 0,
+        p.amountInWords || null,
+        p.codAmount || 0,
+        p.codFee || 0,
+        p.deliveryCharge || 0,
+        p.totalPayableByCourier || 0,
+        p.status || 'In Transit',
+        p.settlementStatus || 'Unsettled',
+        p.trackingUrl || null,
+        p.notes || null,
+        p.bookedAt ? new Date(p.bookedAt) : new Date()
+      ]
+    );
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error saving courier parcel to DB:", err.message);
+    return false;
+  }
+}
+
+export async function deleteCourierParcelFromDb(id: string): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query("DELETE FROM courier_parcels WHERE id = ? OR consignment_id = ?", [id, id]);
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error deleting courier parcel from DB:", err.message);
+    return false;
+  }
+}
+
+export async function fetchCourierSettingsFromDb(): Promise<any | null> {
+  if (!isMySqlConnected()) return null;
+  try {
+    const [rows]: any = await pool!.query("SELECT * FROM courier_settings WHERE id = 'primary' LIMIT 1");
+    if (rows && rows.length > 0 && rows[0].config_json) {
+      return JSON.parse(rows[0].config_json);
+    }
+    return null;
+  } catch (err: any) {
+    console.error("[MYSQL] Error fetching courier settings:", err.message);
+    return null;
+  }
+}
+
+export async function saveCourierSettingsToDb(settings: any): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query(
+      `INSERT INTO courier_settings (
+        id, default_courier, auto_update_order_status, send_customer_sms,
+        sender_name, sender_phone, sender_address, sender_district, config_json
+      ) VALUES ('primary', ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
+        default_courier=VALUES(default_courier),
+        auto_update_order_status=VALUES(auto_update_order_status),
+        send_customer_sms=VALUES(send_customer_sms),
+        sender_name=VALUES(sender_name),
+        sender_phone=VALUES(sender_phone),
+        sender_address=VALUES(sender_address),
+        sender_district=VALUES(sender_district),
+        config_json=VALUES(config_json)`,
+      [
+        settings.defaultCourier || 'Steadfast',
+        settings.autoUpdateOrderStatus !== false,
+        settings.sendCustomerSms !== false,
+        settings.senderName || 'Taqwa Enterprise',
+        settings.senderPhone || '01913955452',
+        settings.senderAddress || null,
+        settings.senderDistrict || 'Dhaka',
+        JSON.stringify(settings)
+      ]
+    );
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error saving courier settings to DB:", err.message);
+    return false;
+  }
+}
+
+export async function fetchSystemSettingsFromDb(): Promise<any | null> {
+  if (!isMySqlConnected()) return null;
+  try {
+    const [rows]: any = await pool!.query("SELECT settings_json FROM system_settings WHERE id = 'primary' LIMIT 1");
+    if (rows && rows.length > 0 && rows[0].settings_json) {
+      return JSON.parse(rows[0].settings_json);
+    }
+    return null;
+  } catch (err: any) {
+    console.error("[MYSQL] Error fetching system settings:", err.message);
+    return null;
+  }
+}
+
+export async function saveSystemSettingsToDb(settings: any): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query(
+      `INSERT INTO system_settings (id, settings_json) VALUES ('primary', ?)
+       ON DUPLICATE KEY UPDATE settings_json=VALUES(settings_json)`,
+      [JSON.stringify(settings)]
+    );
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error saving system settings to DB:", err.message);
+    return false;
+  }
+}
+
 export async function exportDbToSql(): Promise<string> {
   if (!pool) {
     throw new Error("MySQL database is not connected.");
@@ -616,7 +1030,25 @@ export async function exportDbToSql(): Promise<string> {
   sqlDump += `-- ======================================================\n\n`;
   sqlDump += `SET FOREIGN_KEY_CHECKS = 0;\n\n`;
 
-  const tables = ['products', 'users', 'orders', 'order_items', 'courier_points', 'expenses', 'uploaded_files'];
+  const tables = [
+    'products',
+    'users',
+    'orders',
+    'order_items',
+    'courier_points',
+    'courier_parcels',
+    'courier_settings',
+    'system_settings',
+    'coupons',
+    'categories',
+    'suppliers',
+    'purchases',
+    'inventory_logs',
+    'damages',
+    'accounts_transactions',
+    'expenses',
+    'uploaded_files'
+  ];
 
   for (const table of tables) {
     sqlDump += `-- ------------------------------------------------------\n`;

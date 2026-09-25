@@ -18,7 +18,14 @@ import {
   recordUploadedFile,
   saveDbConfig,
   query,
-  exportDbToSql
+  exportDbToSql,
+  fetchCourierParcelsFromDb,
+  saveCourierParcelToDb,
+  deleteCourierParcelFromDb,
+  fetchCourierSettingsFromDb,
+  saveCourierSettingsToDb,
+  fetchSystemSettingsFromDb,
+  saveSystemSettingsToDb
 } from "./server/mysql";
 
 dotenv.config();
@@ -895,6 +902,7 @@ const DAMAGES_FILE = path.join(DB_DIR, "damages.json");
 const ACCOUNTS_FILE = path.join(DB_DIR, "accounts.json");
 const COURIER_POINTS_FILE = path.join(DB_DIR, "courier_points.json");
 const COURIER_SETTINGS_FILE = path.join(DB_DIR, "courier_settings.json");
+const COURIER_PARCELS_FILE = path.join(DB_DIR, "courier_parcels.json");
 
 function loadJSON(file: string, defaultValue: any) {
   try {
@@ -1279,9 +1287,18 @@ function saveProducts() {
 function saveOrders() { 
   saveJSON(ORDERS_FILE, ORDERS); 
   if (isMySqlConnected() && ORDERS.length > 0) {
-    const latestOrder = ORDERS[ORDERS.length - 1];
+    const latestOrder = ORDERS[0];
     if (latestOrder) {
       saveOrderToDb(latestOrder).catch(e => console.warn("[MYSQL] Order sync warn:", e.message));
+    }
+  }
+}
+function saveCourierParcels() {
+  saveJSON(COURIER_PARCELS_FILE, COURIER_PARCELS);
+  if (isMySqlConnected() && COURIER_PARCELS.length > 0) {
+    const latest = COURIER_PARCELS[0];
+    if (latest) {
+      saveCourierParcelToDb(latest).catch(e => console.warn("[MYSQL] Courier parcel sync warn:", e.message));
     }
   }
 }
@@ -1293,7 +1310,12 @@ function saveInventoryLogs() { saveJSON(INVENTORY_LOGS_FILE, INVENTORY_LOGS); }
 function saveNotifications() { saveJSON(NOTIFICATIONS_FILE, NOTIFICATIONS); }
 function saveCarts() { saveJSON(CARTS_FILE, USER_CARTS); }
 function saveWishlists() { saveJSON(WISHLISTS_FILE, USER_WISHLISTS); }
-function saveSettings() { saveJSON(SETTINGS_FILE, SETTINGS); }
+function saveSettings() { 
+  saveJSON(SETTINGS_FILE, SETTINGS); 
+  if (isMySqlConnected()) {
+    saveSystemSettingsToDb(SETTINGS).catch(e => console.warn("[MYSQL] Settings sync warn:", e.message));
+  }
+}
 function saveSuppliers() { saveJSON(SUPPLIERS_FILE, SUPPLIERS); }
 function savePurchases() { saveJSON(PURCHASES_FILE, PURCHASES); }
 function saveExpenses() { saveJSON(EXPENSES_FILE, EXPENSES); }
@@ -1438,6 +1460,48 @@ app.get("/api/products", (req, res) => {
   });
 
   res.json(sanitized);
+});
+
+// API 1B: Single Product Details Lookup by ID or Slug
+app.get("/api/products/:idOrSlug", (req, res) => {
+  const { idOrSlug } = req.params;
+  const decoded = decodeURIComponent(idOrSlug || '');
+  
+  const userEmail = req.headers['x-user-email'] as string;
+  let isAdmin = false;
+  if (userEmail) {
+    const user = USERS.find(u => u.email.trim().toLowerCase() === userEmail.trim().toLowerCase());
+    if (user && ["Super Admin", "Admin", "Manager"].includes(user.role)) {
+      isAdmin = true;
+    }
+  }
+
+  const product = PRODUCTS.find(p => 
+    p.id === decoded || 
+    p.slug === decoded || 
+    p.id === idOrSlug || 
+    p.slug === idOrSlug ||
+    (p.name && p.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === decoded)
+  );
+
+  if (!product) {
+    return res.status(404).json({ error: "Product not found" });
+  }
+
+  if (!isAdmin && product.status === 'Inactive') {
+    return res.status(404).json({ error: "Product is inactive" });
+  }
+
+  let reviewsList = product.reviews || [];
+  if (!isAdmin) {
+    reviewsList = reviewsList.filter((r: any) => r.approved !== false);
+  }
+
+  res.json({
+    ...product,
+    reviews: reviewsList,
+    reviewsCount: reviewsList.length
+  });
 });
 
 // API 2: Add or Edit review dynamically (With Admin Approval flow)
@@ -2221,11 +2285,13 @@ app.post("/api/admin/add-product", checkAdminRole(["Super Admin", "Admin"]), asy
 
   const generatedSku = sku || `TQW-${category.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
   const generatedBarcode = barcode || `880123${Math.floor(1000000 + Math.random() * 9000000)}`;
+  const generatedSlug = (req.body.slug || name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `${category}-${Date.now()}`;
 
   const newProduct = {
     id: `${category}-${Date.now()}`,
     name,
     banglaName,
+    slug: generatedSlug,
     category,
     price: Number(price),
     originalPrice: Number(originalPrice || price),
@@ -2386,7 +2452,15 @@ app.post("/api/admin/update-product", checkAdminRole(["Super Admin", "Admin"]), 
 
   const oldStock = product.stock;
 
-  if (name !== undefined) product.name = name;
+  if (name !== undefined) {
+    product.name = name;
+    if (!product.slug || req.body.slug) {
+      product.slug = (req.body.slug || name).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || product.id;
+    }
+  }
+  if (req.body.slug) {
+    product.slug = req.body.slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
   if (banglaName !== undefined) product.banglaName = banglaName;
   if (category !== undefined) product.category = category;
   if (price !== undefined) product.price = Number(price);
@@ -3686,7 +3760,7 @@ app.post("/api/admin/accounts/delete-transaction", checkAdminRole(["Super Admin"
 
 
 // 6. COURIER LOGISTICS & PARCEL BOOKING ENDPOINTS
-let COURIER_PARCELS: any[] = [
+let COURIER_PARCELS: any[] = loadJSON(COURIER_PARCELS_FILE, [
   {
     id: "cp-101",
     orderId: "ord-1001",
@@ -3710,7 +3784,7 @@ let COURIER_PARCELS: any[] = [
     settlementStatus: "Unsettled",
     notes: "Handle with care - pet food package"
   }
-];
+]);
 
 let COURIER_SETTINGS: any = loadJSON(COURIER_SETTINGS_FILE, {
   defaultCourier: "Steadfast",
@@ -3766,6 +3840,9 @@ let COURIER_SETTINGS: any = loadJSON(COURIER_SETTINGS_FILE, {
 
 function saveCourierSettings() {
   saveJSON(COURIER_SETTINGS_FILE, COURIER_SETTINGS);
+  if (isMySqlConnected()) {
+    saveCourierSettingsToDb(COURIER_SETTINGS).catch(e => console.warn("[MYSQL] Courier settings sync warn:", e.message));
+  }
 }
 
 if (!fs.existsSync(COURIER_SETTINGS_FILE)) {
@@ -3794,6 +3871,12 @@ app.post("/api/admin/courier/book", checkAdminRole(["Super Admin", "Admin", "Man
     COURIER_PARCELS[existingIdx] = { ...COURIER_PARCELS[existingIdx], ...parcel };
   } else {
     COURIER_PARCELS.unshift(parcel);
+  }
+
+  // Save parcel to local persistent store & MySQL
+  saveCourierParcels();
+  if (isMySqlConnected()) {
+    saveCourierParcelToDb(parcel).catch(e => console.warn("[MYSQL] Courier parcel sync warn:", e.message));
   }
 
   // Update or insert into ORDERS so tracking and customer portals can find it immediately
@@ -3878,6 +3961,11 @@ app.post("/api/admin/courier/sync-status", checkAdminRole(["Super Admin", "Admin
     parcel.status = status;
     parcel.lastUpdated = new Date().toISOString();
 
+    saveCourierParcels();
+    if (isMySqlConnected()) {
+      saveCourierParcelToDb(parcel).catch(e => console.warn("[MYSQL] Courier parcel status sync warn:", e.message));
+    }
+
     const targetOrder = ORDERS.find(o => o.orderId === parcel.orderId || o.id === parcel.orderId);
     if (targetOrder) {
       if (status === "Delivered") {
@@ -3891,6 +3979,19 @@ app.post("/api/admin/courier/sync-status", checkAdminRole(["Super Admin", "Admin
   }
 
   res.json({ success: true, parcel });
+});
+
+app.delete("/api/admin/courier/delete", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req: any, res) => {
+  const parcelId = (req.query.id as string) || (req.body && req.body.id);
+  if (!parcelId) {
+    return res.status(400).json({ error: "Parcel ID is required." });
+  }
+  COURIER_PARCELS = COURIER_PARCELS.filter(p => p.id !== parcelId && p.consignmentId !== parcelId);
+  saveCourierParcels();
+  if (isMySqlConnected()) {
+    deleteCourierParcelFromDb(parcelId).catch(e => console.warn("[MYSQL] Parcel delete DB err:", e.message));
+  }
+  res.json({ success: true, message: "Parcel booking record deleted successfully." });
 });
 
 app.get("/api/admin/courier/settings", checkAdminRole(["Super Admin", "Admin"]), (req, res) => {
@@ -4271,6 +4372,36 @@ async function startServer() {
         PRODUCTS = dbProducts;
         saveProducts();
         console.log(`[MYSQL] Successfully loaded ${PRODUCTS.length} live products directly from MySQL database!`);
+      }
+
+      // Hydrate Courier Parcels from MySQL
+      const dbParcels = await fetchCourierParcelsFromDb();
+      if (dbParcels && dbParcels.length > 0) {
+        COURIER_PARCELS = dbParcels;
+        saveJSON(COURIER_PARCELS_FILE, COURIER_PARCELS);
+        console.log(`[MYSQL] Successfully loaded ${COURIER_PARCELS.length} courier booking records from MySQL!`);
+      } else if (COURIER_PARCELS.length > 0) {
+        for (const cp of COURIER_PARCELS) {
+          saveCourierParcelToDb(cp).catch(() => {});
+        }
+      }
+
+      // Hydrate Courier Settings from MySQL
+      const dbCourierSettings = await fetchCourierSettingsFromDb();
+      if (dbCourierSettings) {
+        COURIER_SETTINGS = dbCourierSettings;
+        saveJSON(COURIER_SETTINGS_FILE, COURIER_SETTINGS);
+      } else {
+        saveCourierSettingsToDb(COURIER_SETTINGS).catch(() => {});
+      }
+
+      // Hydrate System Settings from MySQL
+      const dbSettings = await fetchSystemSettingsFromDb();
+      if (dbSettings) {
+        SETTINGS = { ...SETTINGS, ...dbSettings };
+        saveJSON(SETTINGS_FILE, SETTINGS);
+      } else {
+        saveSystemSettingsToDb(SETTINGS).catch(() => {});
       }
     }
   } catch (dbErr: any) {

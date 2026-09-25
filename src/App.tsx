@@ -1417,7 +1417,7 @@ export default function App() {
           unreadNotificationsCount={notifications.filter(n => !n.isRead).length}
           allProducts={products}
           onViewProduct={(prod) => {
-            navigate(`/products/${prod.slug}`);
+            navigate(`/products/${prod.slug || prod.id}`);
           }}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
@@ -1521,31 +1521,28 @@ export default function App() {
         ) : currentPath.startsWith('/products/') ? (
           <div className="py-2">
             {(() => {
-              const slug = currentPath.split('/products/')[1];
-              const matchedProduct = products.find(p => p.slug === slug);
-              if (matchedProduct) {
-                return (
-                  <ProductDetailsPage
-                    productId={matchedProduct.slug || matchedProduct.id}
-                    products={products}
-                    onBack={() => navigate('/')}
-                    onAddToCart={handleAddToCart}
-                    onBuyNow={handleBuyNow}
-                    onReviewSubmit={handleReviewSubmit}
-                    lang={lang}
-                  />
-                );
-              } else {
-                return (
-                  <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 space-y-4 max-w-md mx-auto shadow-sm">
-                    <h3 className="font-bold text-slate-700 text-sm">Product Not Found</h3>
-                    <p className="text-xs text-slate-400">The product you are looking for does not exist or has been removed.</p>
-                    <button onClick={() => navigate('/')} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer">
-                      Return to Store
-                    </button>
-                  </div>
-                );
-              }
+              const rawSlug = currentPath.split('/products/')[1] || '';
+              const slug = decodeURIComponent(rawSlug);
+              const matchedProduct = products.find(p => 
+                p.slug === slug || 
+                p.id === slug || 
+                p.slug === rawSlug || 
+                p.id === rawSlug ||
+                (p.slug && decodeURIComponent(p.slug) === slug) ||
+                (p.name && p.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === slug)
+              );
+              return (
+                <ProductDetailsPage
+                  productId={slug || rawSlug}
+                  initialProduct={matchedProduct}
+                  products={products}
+                  onBack={() => navigate('/')}
+                  onAddToCart={handleAddToCart}
+                  onBuyNow={handleBuyNow}
+                  onReviewSubmit={handleReviewSubmit}
+                  lang={lang}
+                />
+              );
             })()}
           </div>
         ) : activeTab === 'track' ? (
@@ -1961,7 +1958,7 @@ export default function App() {
                       key={p.id}
                       product={p}
                       lang={lang}
-                      onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
+                      onViewProduct={(prod) => navigate(`/products/${prod.slug || prod.id}`)}
                       onAddToCart={handleAddToCart}
                       onBuyNow={handleBuyNow}
                     />
@@ -1999,7 +1996,7 @@ export default function App() {
                       key={p.id}
                       product={p}
                       lang={lang}
-                      onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
+                      onViewProduct={(prod) => navigate(`/products/${prod.slug || prod.id}`)}
                       onAddToCart={handleAddToCart}
                       onBuyNow={handleBuyNow}
                     />
@@ -2107,7 +2104,7 @@ export default function App() {
                     {products.slice(0, 2).map((item) => (
                       <div
                         key={item.id}
-                        onClick={() => navigate(`/products/${item.slug}`)}
+                        onClick={() => navigate(`/products/${item.slug || item.id}`)}
                         className="bg-white/10 backdrop-blur-md p-2.5 rounded-xl border border-white/15 w-full sm:w-36 text-left cursor-pointer hover:bg-white/15 transition-all"
                       >
                         <img
@@ -2156,7 +2153,7 @@ export default function App() {
                       key={p.id}
                       product={p}
                       lang={lang}
-                      onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
+                      onViewProduct={(prod) => navigate(`/products/${prod.slug || prod.id}`)}
                       onAddToCart={handleAddToCart}
                       onBuyNow={handleBuyNow}
                     />
@@ -2403,7 +2400,7 @@ export default function App() {
                             key={p.id}
                             product={p}
                             lang={lang}
-                            onViewProduct={(prod) => navigate(`/products/${prod.slug}`)}
+                            onViewProduct={(prod) => navigate(`/products/${prod.slug || prod.id}`)}
                             onAddToCart={handleAddToCart}
                             onBuyNow={handleBuyNow}
                           />

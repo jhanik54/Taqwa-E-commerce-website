@@ -371,7 +371,7 @@ export default function ProductManagement({
       id: selectedProduct?.id || `prod-${Date.now()}`,
       name: name.trim(),
       banglaName: (banglaName || name).trim(),
-      slug: slug || `prod-${Date.now()}`,
+      slug: (slug || name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `prod-${Date.now()}`,
       sku: sku || `TQW-${Math.floor(100000 + Math.random() * 900000)}`,
       barcode: barcode || `880123${Math.floor(1000000 + Math.random() * 9000000)}`,
       shortDescription: shortDesc,

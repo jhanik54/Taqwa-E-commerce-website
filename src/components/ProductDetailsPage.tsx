@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Star, Sparkles, MessageCirclePlus, Weight, FileText, ShoppingBag, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Star, Sparkles, MessageCirclePlus, Weight, FileText, ShoppingBag, ArrowLeft, ShieldCheck, Loader2 } from 'lucide-react';
 import { Product } from '../types';
 import { DEFAULT_PRODUCT_IMAGE } from '../lib/cloudinary';
 
 interface ProductDetailsPageProps {
   productId: string;
+  initialProduct?: Product | null;
   products: Product[];
   lang: 'en' | 'bn';
   onBack: () => void;
@@ -15,6 +16,7 @@ interface ProductDetailsPageProps {
 
 export default function ProductDetailsPage({
   productId,
+  initialProduct,
   products = [],
   lang,
   onBack,
@@ -23,7 +25,6 @@ export default function ProductDetailsPage({
   onReviewSubmit
 }: ProductDetailsPageProps) {
   const isBn = lang === 'bn';
-  const product = products.find(p => p.id === productId || p.slug === productId);
 
   const [userName, setUserName] = useState('');
   const [rating, setRating] = useState(5);
@@ -33,19 +34,69 @@ export default function ProductDetailsPage({
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
   // Active product states
-  const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+  const [activeProduct, setActiveProduct] = useState<Product | null>(initialProduct || null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState<boolean>(!initialProduct);
   const [activeImage, setActiveImage] = useState('');
   const [selectedVariant, setSelectedVariant] = useState('');
 
   useEffect(() => {
-    if (product) {
-      setActiveProduct(product);
-      setActiveImage(product.image);
-      setSelectedVariant(product.variants?.[0] || product.weight || 'Default');
+    // 1. First check if passed via initialProduct or found in products array
+    const decodedId = decodeURIComponent(productId || '');
+    const foundInList = initialProduct || products.find(p => 
+      p.id === decodedId || 
+      p.slug === decodedId || 
+      p.id === productId || 
+      p.slug === productId ||
+      (p.slug && decodeURIComponent(p.slug) === decodedId) ||
+      (p.name && p.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === decodedId)
+    );
+
+    if (foundInList) {
+      setActiveProduct(foundInList);
+      setActiveImage(foundInList.image || DEFAULT_PRODUCT_IMAGE);
+      setSelectedVariant(foundInList.variants?.[0] || foundInList.weight || 'Default');
       setReviewMessage('');
+      setIsLoadingProduct(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
-  }, [product, productId]);
+
+    // 2. Fallback: Fetch directly from API if not found in memory (e.g. direct load or filtered catalog)
+    setIsLoadingProduct(true);
+    fetch(`/api/products/${encodeURIComponent(productId)}`)
+      .then(res => {
+        if (res.ok) return res.json();
+        throw new Error('Product not found');
+      })
+      .then((data: Product) => {
+        if (data && data.id) {
+          setActiveProduct(data);
+          setActiveImage(data.image || DEFAULT_PRODUCT_IMAGE);
+          setSelectedVariant(data.variants?.[0] || data.weight || 'Default');
+          setReviewMessage('');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          setActiveProduct(null);
+        }
+      })
+      .catch(() => {
+        setActiveProduct(null);
+      })
+      .finally(() => {
+        setIsLoadingProduct(false);
+      });
+  }, [productId, initialProduct, products]);
+
+  if (isLoadingProduct) {
+    return (
+      <div className="py-24 text-center space-y-4 max-w-md mx-auto flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <p className="text-xs font-bold text-slate-500">
+          {isBn ? 'পণ্যের তথ্য লোড হচ্ছে...' : 'Fetching product details...'}
+        </p>
+      </div>
+    );
+  }
 
   if (!activeProduct) {
     return (
